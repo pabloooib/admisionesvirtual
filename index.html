@@ -568,7 +568,7 @@ input:checked + .slider::before{ transform: translateX(18px); }
   </div>
 </div>
 
-<!-- ================= MODAL: Detalle del prospecto ================= -->
+<!-- ================= MODAL: Detalle del prospecto (solo lectura) ================= -->
 <div class="modal-overlay" id="modalLead">
   <div class="modal">
     <div class="modal-head">
@@ -581,60 +581,22 @@ input:checked + .slider::before{ transform: translateX(18px); }
       <div class="detalle-item"><div class="k">Correo</div><div class="v" id="detCorreo">—</div></div>
       <div class="detalle-item"><div class="k">Teléfono</div><div class="v" id="detTelefono">—</div></div>
       <div class="detalle-item"><div class="k">Registrado por</div><div class="v" id="detCreadoPor">—</div></div>
-    </div>
-
-    <div class="row-2">
-      <div class="field">
-        <label>Canal de ingreso</label>
-        <select id="detCanal"></select>
-      </div>
-      <div class="field">
-        <label>Asesor comercial</label>
-        <input type="text" id="detAsesor">
-      </div>
-    </div>
-    <div class="row-2">
-      <div class="field">
-        <label>¿Contestó?</label>
-        <select id="detContacto">
-          <option value="no_contesto">No contestó</option>
-          <option value="contesto">Contestó</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Estado de seguimiento</label>
-        <select id="detEstado">
-          <option value="nuevo">Nuevo</option>
-          <option value="en_seguimiento">En seguimiento</option>
-          <option value="interesado">Interesado</option>
-          <option value="no_interesado">No interesado</option>
-          <option value="inscrito">Inscrito</option>
-        </select>
-      </div>
+      <div class="detalle-item"><div class="k">Canal de ingreso</div><div class="v" id="detCanal">—</div></div>
+      <div class="detalle-item"><div class="k">Asesor comercial</div><div class="v" id="detAsesor">—</div></div>
+      <div class="detalle-item"><div class="k">¿Contestó?</div><div class="v" id="detContacto">—</div></div>
+      <div class="detalle-item"><div class="k">Estado de seguimiento</div><div class="v" id="detEstado">—</div></div>
     </div>
     <div class="field">
       <label>Observaciones</label>
-      <textarea id="detObservaciones"></textarea>
+      <div class="v" id="detObservaciones" style="font-weight:500; color:var(--text-muted); line-height:1.5;">—</div>
     </div>
 
-    <div id="detAdminNote" class="admin-only-note hidden">Estás en modo de solo lectura. Solo el equipo administrador puede editar este prospecto.</div>
-
-    <div class="modal-actions" id="detAccionesAdmin">
-      <button class="btn btn-danger" id="btnEliminarLead">Eliminar</button>
-      <button class="btn btn-primary" id="btnGuardarLead2">Guardar cambios</button>
-    </div>
+    <div class="admin-only-note">Esta vista es de solo consulta. La edición y el seguimiento del prospecto los gestiona el equipo administrador.</div>
 
     <div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--border);">
       <div class="section-title" style="font-size:14px;">Historial de seguimiento</div>
       <div id="listaSeguimientos"></div>
       <div id="seguimientosEmpty"></div>
-      <div id="formNuevoSeguimiento" style="margin-top:14px;">
-        <div class="field">
-          <label>Agregar nota de seguimiento</label>
-          <textarea id="inputNuevaNotaSeguimiento" placeholder="Ej. Se llamó nuevamente, indica que decidirá la próxima semana…"></textarea>
-        </div>
-        <button class="btn btn-ghost btn-block" id="btnAgregarNotaSeguimiento">Agregar nota</button>
-      </div>
     </div>
   </div>
 </div>
@@ -1106,13 +1068,9 @@ function renderDashboard(){
 }
 
 // ================================================================
-// MODAL: Detalle del prospecto + historial de seguimiento
+// MODAL: Detalle del prospecto + historial de seguimiento (solo lectura)
 // ================================================================
 const modalLead = document.getElementById('modalLead');
-Object.entries(CANAL_LABELS).forEach(([val,label])=>{
-  const opt = document.createElement('option'); opt.value = val; opt.textContent = label;
-  document.getElementById('detCanal').appendChild(opt);
-});
 
 function abrirDetalleLead(id){
   const lead = state.leads.find(l=> l.id === id);
@@ -1123,17 +1081,11 @@ function abrirDetalleLead(id){
   document.getElementById('detCorreo').textContent = lead.correo||'—';
   document.getElementById('detTelefono').textContent = lead.telefono||'—';
   document.getElementById('detCreadoPor').textContent = lead.creadoPor||'—';
-  document.getElementById('detCanal').value = lead.canalIngreso||'Otro';
-  document.getElementById('detAsesor').value = lead.asesorComercial||'';
-  document.getElementById('detContacto').value = lead.contacto||'no_contesto';
-  document.getElementById('detEstado').value = lead.estado||'nuevo';
-  document.getElementById('detObservaciones').value = lead.observaciones||'';
-
-  const camposEditables = [document.getElementById('detCanal'), document.getElementById('detAsesor'), document.getElementById('detContacto'), document.getElementById('detEstado'), document.getElementById('detObservaciones')];
-  camposEditables.forEach(el=> el.disabled = !state.admin);
-  document.getElementById('detAdminNote').classList.toggle('hidden', state.admin);
-  document.getElementById('detAccionesAdmin').classList.toggle('hidden', !state.admin);
-  document.getElementById('formNuevoSeguimiento').classList.toggle('hidden', !state.admin);
+  document.getElementById('detCanal').textContent = CANAL_LABELS[lead.canalIngreso] || lead.canalIngreso || '—';
+  document.getElementById('detAsesor').textContent = lead.asesorComercial||'—';
+  document.getElementById('detContacto').textContent = lead.contacto==='contesto' ? 'Contestó' : 'No contestó';
+  document.getElementById('detEstado').textContent = ESTADO_LABELS[lead.estado] || lead.estado || '—';
+  document.getElementById('detObservaciones').textContent = lead.observaciones || 'Sin observaciones registradas.';
 
   suscribirSeguimientos(id);
   modalLead.classList.add('open');
@@ -1142,47 +1094,6 @@ function abrirDetalleLead(id){
 document.getElementById('btnCerrarModalLead').addEventListener('click', ()=>{
   modalLead.classList.remove('open');
   if(state.unsubSeguimientos){ state.unsubSeguimientos(); state.unsubSeguimientos = null; }
-});
-
-document.getElementById('btnGuardarLead2').addEventListener('click', async ()=>{
-  if(!state.admin || !state.leadAbierto) return;
-  const btn = document.getElementById('btnGuardarLead2');
-  btn.disabled = true; btn.textContent = 'Guardando…';
-  try{
-    await db.collection('leads').doc(state.leadAbierto.id).update({
-      canalIngreso: document.getElementById('detCanal').value,
-      asesorComercial: document.getElementById('detAsesor').value.trim(),
-      contacto: document.getElementById('detContacto').value,
-      estado: document.getElementById('detEstado').value,
-      observaciones: document.getElementById('detObservaciones').value.trim() || null,
-      actualizadoEn: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    toast('Prospecto actualizado', 'ok');
-    modalLead.classList.remove('open');
-  }catch(err){
-    console.error(err);
-    toast('No se pudo guardar: ' + (err.message||err.code), 'err');
-  }finally{
-    btn.disabled = false; btn.textContent = 'Guardar cambios';
-  }
-});
-
-document.getElementById('btnEliminarLead').addEventListener('click', async ()=>{
-  if(!state.admin || !state.leadAbierto) return;
-  if(!confirm(`¿Eliminar el prospecto "${state.leadAbierto.nombre}"? Esta acción no se puede deshacer.`)) return;
-  try{
-    const leadId = state.leadAbierto.id;
-    const seguimientosSnap = await db.collection('leads').doc(leadId).collection('seguimientos').get();
-    const batch = db.batch();
-    seguimientosSnap.forEach(doc=> batch.delete(doc.ref));
-    batch.delete(db.collection('leads').doc(leadId));
-    await batch.commit();
-    toast('Prospecto eliminado', 'info');
-    modalLead.classList.remove('open');
-  }catch(err){
-    console.error(err);
-    toast('No se pudo eliminar: ' + (err.message||err.code), 'err');
-  }
 });
 
 function suscribirSeguimientos(leadId){
@@ -1210,31 +1121,6 @@ function suscribirSeguimientos(leadId){
         </div>`).join('');
     }, err=> console.error('Error al leer seguimientos:', err));
 }
-
-document.getElementById('btnAgregarNotaSeguimiento').addEventListener('click', async ()=>{
-  if(!state.admin || !state.leadAbierto) return;
-  const textarea = document.getElementById('inputNuevaNotaSeguimiento');
-  const nota = textarea.value.trim();
-  if(!nota){ toast('Escribe una nota antes de guardar', 'err'); return; }
-  const btn = document.getElementById('btnAgregarNotaSeguimiento');
-  btn.disabled = true; btn.textContent = 'Agregando…';
-  try{
-    await db.collection('leads').doc(state.leadAbierto.id).collection('seguimientos').add({
-      nota,
-      autor: state.nombre,
-      autorCorreo: state.correo,
-      fecha: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    await db.collection('leads').doc(state.leadAbierto.id).update({ actualizadoEn: firebase.firestore.FieldValue.serverTimestamp() });
-    textarea.value = '';
-    toast('Nota de seguimiento agregada', 'ok');
-  }catch(err){
-    console.error(err);
-    toast('No se pudo agregar la nota: ' + (err.message||err.code), 'err');
-  }finally{
-    btn.disabled = false; btn.textContent = 'Agregar nota';
-  }
-});
 </script>
 </body>
 </html>
