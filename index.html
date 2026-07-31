@@ -340,7 +340,7 @@ input:checked + .slider::before{ transform: translateX(18px); }
         Continuar con Microsoft
       </button>
       <div id="loginError" class="hint" style="color:var(--danger); margin-top:12px; display:none;"></div>
-      <div class="login-foot">Acceso exclusivo para personal con correo institucional @upana.edu.gt</div>
+      <div class="login-foot">Acceso con tu cuenta de Microsoft 365 institucional (licencia UPANA)</div>
     </div>
   </div>
 </div>
@@ -667,7 +667,6 @@ const STAFF_UPANA = [
   { correo:'jibanez@upana.edu.gt', nombre:'José Pablo Ibañez Ibáñez', puesto:'Agente de Call Center y Servicio al Cliente', area:'Admisión y Atracción Estudiantil', ext:'8029' }
 ];
 const ADMIN_EMAILS = STAFF_UPANA.map(s=> s.correo.toLowerCase());
-const DOMINIO_PERMITIDO = 'upana.edu.gt';
 
 function buscarStaff(correo){
   if(!correo) return null;
@@ -740,6 +739,29 @@ document.getElementById('btnMicrosoftLogin').addEventListener('click', async ()=
     await auth.signInWithPopup(msProvider);
   }catch(err){
     console.error(err);
+    // Si el navegador bloquea la ventana emergente (o hay problemas de popup),
+    // se intenta el inicio de sesión con redirección como respaldo.
+    if(err && (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user')){
+      try{
+        await auth.signInWithRedirect(msProvider);
+        return;
+      }catch(err2){
+        console.error(err2);
+        errEl.textContent = 'No se pudo iniciar sesión con Microsoft: ' + (err2.message || err2.code);
+        errEl.style.display = 'block';
+        return;
+      }
+    }
+    errEl.textContent = 'No se pudo iniciar sesión con Microsoft: ' + (err.message || err.code);
+    errEl.style.display = 'block';
+  }
+});
+
+// Procesa el resultado si el login se completó por redirección
+auth.getRedirectResult().catch(err=>{
+  if(err){
+    console.error(err);
+    const errEl = document.getElementById('loginError');
     errEl.textContent = 'No se pudo iniciar sesión con Microsoft: ' + (err.message || err.code);
     errEl.style.display = 'block';
   }
@@ -751,17 +773,14 @@ function cerrarSesion(){
 document.getElementById('btnLogout').addEventListener('click', cerrarSesion);
 document.getElementById('btnLogout2').addEventListener('click', cerrarSesion);
 
+// El acceso está abierto a cualquier persona que inicie sesión con su cuenta
+// de Microsoft (la licencia/asignación la controla el equipo de TI en Azure AD).
+// Los roles de administrador se asignan únicamente a los tres correos definidos
+// en STAFF_UPANA / ADMIN_EMAILS; todos los demás entran como colaboradores.
 auth.onAuthStateChanged(async (user)=>{
   const veil = document.getElementById('loadingVeil');
   if(user){
     const correo = (user.email||'').toLowerCase();
-    if(!correo.endsWith('@' + DOMINIO_PERMITIDO)){
-      await auth.signOut();
-      document.getElementById('loginError').textContent = 'Acceso exclusivo para cuentas institucionales @' + DOMINIO_PERMITIDO;
-      document.getElementById('loginError').style.display = 'block';
-      veil.style.opacity = '0'; setTimeout(()=> veil.classList.add('hidden'), 300);
-      return;
-    }
     state.user = user;
     state.correo = correo;
     const staff = buscarStaff(correo);
