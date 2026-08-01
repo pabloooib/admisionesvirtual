@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -93,6 +95,10 @@ a{ color:inherit; text-decoration:none; }
 }
 .brand-row{ display:flex; align-items:center; gap:14px; position:relative; z-index:1; }
 .brand-badge{ width:44px; height:44px; border-radius:12px; background:var(--verde); display:flex; align-items:center; justify-content:center; color:#0C0E12; font-weight:800; font-family:var(--font-display); font-size:17px; box-shadow:var(--shadow-sm); flex-shrink:0; }
+.brand-badge.logo-mark{ position:relative; background:none; box-shadow:none; }
+.brand-badge.logo-mark::before{ content:""; position:absolute; inset:-7px; border-radius:50%; background:radial-gradient(circle, rgba(141,198,63,.40), transparent 70%); animation:logoPulse 3.4s ease-in-out infinite; }
+.brand-badge.logo-mark svg{ position:relative; z-index:1; width:100%; height:100%; filter:drop-shadow(0 3px 8px rgba(141,198,63,.30)); }
+@keyframes logoPulse{ 0%,100%{ opacity:.5; transform:scale(.92);} 50%{ opacity:1; transform:scale(1.08);} }
 .brand-row .brand-name{ font-family:var(--font-display); font-weight:700; font-size:19px; line-height:1.15; }
 .brand-row .brand-sub{ font-size:12px; opacity:.7; letter-spacing:.06em; text-transform:uppercase; }
 .login-hero{ position:relative; z-index:1; max-width:460px; margin-top:40px; }
@@ -246,6 +252,21 @@ tbody tr:last-child td{ border-bottom:none; }
 .toast.info{ border-color:var(--border-strong); color:var(--text); }
 
 .app-footer{ text-align:center; font-size:11.5px; color:var(--text-muted); padding:22px 0 8px; opacity:.65; }
+
+/* ---------- WELCOME OVERLAY ---------- */
+#welcomeOverlay{ position:fixed; inset:0; z-index:900; background:radial-gradient(120% 140% at 15% 10%, rgba(141,198,63,.20), transparent 55%), linear-gradient(155deg,#0A0C0F 0%,#12161B 55%,#171E17 100%); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .4s var(--ease); }
+#welcomeOverlay.show{ opacity:1; pointer-events:auto; }
+#welcomeOverlay .wc-badge{ width:78px; height:78px; margin:0 auto 22px; }
+#welcomeOverlay .wc-badge svg{ width:100%; height:100%; filter:drop-shadow(0 6px 20px rgba(141,198,63,.35)); }
+#welcomeOverlay .wc-box{ text-align:center; transform:translateY(16px) scale(.96); opacity:0; transition:all .55s var(--ease); }
+#welcomeOverlay.show .wc-box{ transform:translateY(0) scale(1); opacity:1; }
+#welcomeOverlay .wc-eyebrow{ display:inline-flex; align-items:center; gap:8px; font-size:11.5px; letter-spacing:.09em; text-transform:uppercase; background:rgba(141,198,63,.14); color:var(--verde-suave); padding:6px 14px; border-radius:99px; margin-bottom:18px; }
+#welcomeOverlay h1{ font-size:30px; color:#fff; margin-bottom:8px; font-family:var(--font-display); }
+#welcomeOverlay p{ color:rgba(255,255,255,.7); font-size:14px; }
+#welcomeOverlay .wc-ring{ position:absolute; width:220px; height:220px; border-radius:50%; border:2px solid rgba(141,198,63,.25); animation:ringPulse 2.4s ease-out infinite; }
+@keyframes ringPulse{ 0%{ transform:scale(.7); opacity:.9;} 100%{ transform:scale(1.6); opacity:0;} }
+@keyframes logoSpinIn{ from{ transform:rotate(-40deg) scale(.6); opacity:0;} to{ transform:rotate(0) scale(1); opacity:1;} }
+#welcomeOverlay.show .wc-badge svg{ animation:logoSpinIn .7s var(--ease); }
 </style>
 </head>
 <body>
@@ -253,11 +274,22 @@ tbody tr:last-child td{ border-bottom:none; }
 <div id="loadingVeil" class="loading-veil"><div class="spinner"></div></div>
 <div class="toast-host" id="toastHost"></div>
 
+<!-- ================= BIENVENIDA POST-LOGIN ================= -->
+<div id="welcomeOverlay">
+  <div class="wc-ring"></div>
+  <div class="wc-box">
+    <div class="wc-badge logo-mark"></div>
+    <span class="wc-eyebrow">Acceso verificado</span>
+    <h1 id="wcSaludo">¡Bienvenido!</h1>
+    <p id="wcSub">Preparando tu panel de Administración…</p>
+  </div>
+</div>
+
 <!-- ================= LOGIN ================= -->
 <div id="loginScreen" class="hidden">
   <div class="login-aside">
     <div class="brand-row">
-      <div class="brand-badge">UP</div>
+      <div class="brand-badge logo-mark"></div>
       <div>
         <div class="brand-name">Panel de Colaboradores</div>
         <div class="brand-sub">UPANA Virtual · Administración</div>
@@ -290,7 +322,7 @@ tbody tr:last-child td{ border-bottom:none; }
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <aside class="sidebar" id="sidebar">
     <div class="brand-row">
-      <div class="brand-badge">UP</div>
+      <div class="brand-badge logo-mark"></div>
       <div>
         <div class="brand-name">Colaboradores</div>
         <div class="brand-sub" style="text-transform:none; letter-spacing:0;">Panel de Administración</div>
@@ -306,6 +338,10 @@ tbody tr:last-child td{ border-bottom:none; }
       <div class="nav-item" data-view="colaboradores">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Colaboradores
+      </div>
+      <div class="nav-item" data-view="neuro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5Z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/></svg>
+        Diplomado · Neuroeducación
       </div>
     </div>
 
@@ -353,17 +389,6 @@ tbody tr:last-child td{ border-bottom:none; }
 
       <!-- ---- VIEW: Dashboard ---- -->
       <section class="view" id="view-dashboard">
-        <div class="welcome-banner hidden" id="welcomeBanner">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-          <div>
-            <div class="t" id="welcomeText">¡Bienvenido!</div>
-            <div class="d">Este es el panel de administración de Colaboradores, creado por PABLOOIB.</div>
-          </div>
-          <div class="x" id="btnCerrarWelcome">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          </div>
-        </div>
-
         <div class="stat-cards" id="dashboardCards"></div>
         <div class="two-col-charts" style="margin-bottom:20px;">
           <div class="card">
@@ -418,17 +443,55 @@ tbody tr:last-child td{ border-bottom:none; }
               <option value="aprobado">Aprobado</option>
               <option value="rechazado">Rechazado</option>
             </select>
+            <button class="btn btn-ghost btn-sm" id="btnSeleccionarInscritos">Seleccionar inscritos</button>
             <button class="btn btn-ghost btn-sm" id="btnLimpiarFiltros">Limpiar</button>
             <button class="btn btn-ghost btn-sm" id="btnExportarCsv">Exportar CSV</button>
             <button class="btn btn-ghost btn-sm" id="btnExportarJson">Exportar JSON</button>
           </div>
+          <div class="toolbar hidden" id="barraSeleccion" style="background:var(--surface-2); border:1px solid rgba(141,198,63,.3); border-radius:var(--radius-sm); padding:10px 14px;">
+            <span style="font-size:12.8px; font-weight:600;"><span id="countSeleccionados">0</span> colaborador(es) inscrito(s) seleccionado(s)</span>
+            <button class="btn btn-primary btn-sm" id="btnAprobarSeleccion" style="margin-left:auto;">Marcar como Aprobado</button>
+            <button class="btn btn-ghost btn-sm" id="btnLimpiarSeleccion">Deseleccionar</button>
+          </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Fecha</th><th>Colaborador</th><th>Tipo</th><th>Estado académico</th><th>Área de interés</th><th>Solicitud</th><th></th></tr></thead>
+              <thead><tr><th style="width:34px;"><input type="checkbox" id="checkTodos"></th><th>Fecha</th><th>Colaborador</th><th>Tipo</th><th>Estado académico</th><th>Área de interés</th><th>Solicitud</th><th></th></tr></thead>
               <tbody id="tablaColaboradores"></tbody>
             </table>
           </div>
           <div id="colaboradoresEmpty"></div>
+        </div>
+      </section>
+
+      <!-- ---- VIEW: Diplomado en Neuroeducación (sincronizado con el Panel de Colaborador) ---- -->
+      <section class="view hidden" id="view-neuro">
+        <div class="card" style="margin-bottom:18px; display:flex; align-items:center; gap:14px;">
+          <div class="ic" style="width:40px; height:40px; border-radius:10px; background:var(--verde-glow); display:flex; align-items:center; justify-content:center; color:var(--verde-suave); flex-shrink:0;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5Z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/></svg>
+          </div>
+          <div>
+            <div class="t" style="font-weight:700; font-size:14.5px;">Sincronizado en vivo con el Panel de Colaborador</div>
+            <div class="d" style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">Los cambios que realices aquí se reflejan automáticamente allá, y viceversa — sin recargar la página.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="toolbar">
+            <button class="btn btn-primary btn-sm" id="tabNeuroInteresados" data-neuro-tab="interesado">Interesados <span id="countNeuroInteresados">0</span></button>
+            <button class="btn btn-ghost btn-sm" id="tabNeuroInscritos" data-neuro-tab="inscrito">Inscritos <span id="countNeuroInscritos">0</span></button>
+            <button class="btn btn-ghost btn-sm" id="btnSeleccionarNeuroInscritos" style="margin-left:auto;">Seleccionar inscritos</button>
+          </div>
+          <div class="toolbar hidden" id="barraSeleccionNeuro" style="background:var(--surface-2); border:1px solid rgba(141,198,63,.3); border-radius:var(--radius-sm); padding:10px 14px;">
+            <span style="font-size:12.8px; font-weight:600;"><span id="countSeleccionadosNeuro">0</span> lead(s) inscrito(s) seleccionado(s)</span>
+            <button class="btn btn-ghost btn-sm" id="btnRevertirSeleccionNeuro" style="margin-left:auto;">Regresar a Interesado</button>
+            <button class="btn btn-ghost btn-sm" id="btnLimpiarSeleccionNeuro">Deseleccionar</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th style="width:34px;"></th><th>Lead</th><th>Facultad</th><th>Correo · Teléfono</th><th>Fecha</th><th></th></tr></thead>
+              <tbody id="tablaNeuro"></tbody>
+            </table>
+          </div>
+          <div id="neuroEmpty"></div>
         </div>
       </section>
 
@@ -453,7 +516,7 @@ tbody tr:last-child td{ border-bottom:none; }
       <div class="detalle-item"><div class="k">DPI</div><div class="v" id="detDpi">—</div></div>
       <div class="detalle-item"><div class="k">Tipo</div><div class="v" id="detTipo">—</div></div>
       <div class="detalle-item"><div class="k">Estado académico</div><div class="v" id="detEstadoAcad">—</div></div>
-      <div class="detalle-item"><div class="k">Carné</div><div class="v" id="detCarne">—</div></div>
+      <div class="detalle-item"><div class="k">ID Estudiantil</div><div class="v" id="detCarne">—</div></div>
       <div class="detalle-item"><div class="k">Facultad / Carrera</div><div class="v" id="detCarrera">—</div></div>
       <div class="detalle-item"><div class="k">Profesión / Ocupación</div><div class="v" id="detProfesion">—</div></div>
       <div class="detalle-item"><div class="k">Área de interés</div><div class="v" id="detArea">—</div></div>
@@ -490,6 +553,29 @@ tbody tr:last-child td{ border-bottom:none; }
 
 <script>
 // ================================================================
+// Isotipo de marca (idéntico al Panel de Colaborador)
+// ================================================================
+const LOGO_MARK_SVG = `
+<svg viewBox="0 0 900 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Isotipo institucional">
+  <polygon points="450,90 138,270 138,630 450,810 762,630 762,270" fill="none" stroke="#8DC63F" stroke-width="118" stroke-linejoin="miter"/>
+  <polyline points="335,312 335,532 450,612 565,532 565,312" fill="none" stroke="#8DC63F" stroke-width="82" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>`.trim();
+function insertarLogo(selector){ document.querySelectorAll(selector).forEach(el => { el.innerHTML = LOGO_MARK_SVG; }); }
+(function instalarFavicon(){
+  const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900">
+  <rect width="900" height="900" rx="170" fill="#0C0E12"/>
+  <polygon points="450,100 152,275 152,625 450,800 748,625 748,275" fill="none" stroke="#8DC63F" stroke-width="112" stroke-linejoin="miter"/>
+  <polyline points="340,318 340,528 450,604 560,528 560,318" fill="none" stroke="#8DC63F" stroke-width="78" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>`.trim();
+  let link = document.querySelector("link[rel~='icon']");
+  if(!link){ link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+  link.type = 'image/svg+xml';
+  link.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
+})();
+insertarLogo('.logo-mark');
+
+// ================================================================
 // FIREBASE
 // ================================================================
 const firebaseConfig = {
@@ -516,7 +602,8 @@ const ESTADO_SOL_BADGE = { pendiente:'badge-gray', en_entrevista:'badge-azul', a
 
 const state = {
   user: null, correo: null, nombre: null,
-  colaboradores: [], currentView: 'dashboard', abierto: null
+  colaboradores: [], currentView: 'dashboard', abierto: null,
+  seleccionados: new Set()
 };
 
 // ================================================================
@@ -592,31 +679,34 @@ auth.onAuthStateChanged(async (user)=>{
     state.user = user;
     state.correo = (user.email||'').toLowerCase();
     state.nombre = user.displayName || user.email;
-    entrarAlPanel();
     if(esPrimerLogin){
-      mostrarBienvenida();
       esPrimerLogin = false;
+      document.getElementById('loginScreen').classList.add('hidden');
+      mostrarBienvenida(() => entrarAlPanel());
+    } else {
+      entrarAlPanel();
     }
   } else {
     state.user = null;
     document.getElementById('appShell').classList.add('hidden');
     document.getElementById('loginScreen').classList.remove('hidden');
+    detenerSyncNeuro();
   }
   veil.style.opacity = '0';
   setTimeout(()=> veil.classList.add('hidden'), 300);
 });
 
-function mostrarBienvenida(){
+function mostrarBienvenida(callback){
+  const overlay = document.getElementById('welcomeOverlay');
   const primerNombre = (state.nombre||'').split(' ')[0];
-  toast('¡Bienvenido(a), ' + (primerNombre || state.nombre) + '! 👋', 'ok');
-  const banner = document.getElementById('welcomeBanner');
-  document.getElementById('welcomeText').textContent = '¡Bienvenido(a), ' + state.nombre + '!';
-  banner.classList.remove('hidden');
+  document.getElementById('wcSaludo').textContent = `¡Bienvenido(a), ${primerNombre || state.nombre}!`;
+  document.getElementById('wcSub').textContent = 'Preparando tu panel de Administración…';
+  overlay.classList.add('show');
+  setTimeout(() => {
+    overlay.classList.remove('show');
+    setTimeout(() => callback && callback(), 250);
+  }, 1600);
 }
-document.getElementById('btnCerrarWelcome').addEventListener('click', ()=>{
-  document.getElementById('welcomeBanner').classList.add('hidden');
-});
-
 function entrarAlPanel(){
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('appShell').classList.remove('hidden');
@@ -641,7 +731,8 @@ document.addEventListener('click', ()=> userMenu.classList.remove('open'));
 
 const VIEW_META = {
   'dashboard': { title:'Dashboard', sub:'Panorama general de colaboradores' },
-  'colaboradores': { title:'Colaboradores', sub:'Consulta y gestiona todas las postulaciones' }
+  'colaboradores': { title:'Colaboradores', sub:'Consulta y gestiona todas las postulaciones' },
+  'neuro': { title:'Diplomado · Neuroeducación', sub:'Sincronizado en vivo con el Panel de Colaborador' }
 };
 
 function cambiarVista(view){
@@ -658,6 +749,7 @@ function cambiarVista(view){
 
   if(view === 'dashboard') renderDashboard();
   if(view === 'colaboradores') renderColaboradores();
+  if(view === 'neuro') renderNeuro();
 }
 document.querySelectorAll('.nav-item[data-view]').forEach(item=>{
   item.addEventListener('click', ()=> cambiarVista(item.dataset.view));
@@ -800,6 +892,7 @@ function renderColaboradores(){
   emptyHost.innerHTML = '';
   tbody.innerHTML = regs.map(c=> `
     <tr>
+      <td>${c.estadoInscripcion==='inscrito' ? `<input type="checkbox" class="check-fila" data-id="${c.id}" ${state.seleccionados.has(c.id)?'checked':''}>` : ''}</td>
       <td class="mono" style="white-space:nowrap;">${fmtFecha(c.fechaRegistro)}</td>
       <td>
         <div style="font-weight:600;">${c.nombreCompleto||'—'}</div>
@@ -811,7 +904,54 @@ function renderColaboradores(){
       <td><span class="badge ${ESTADO_SOL_BADGE[c.estadoSolicitud]||'badge-gray'}">${ESTADO_SOL_LABELS[c.estadoSolicitud]||'Pendiente'}</span></td>
       <td><button class="btn btn-ghost btn-sm" onclick="abrirDetalle('${c.id}')">Ver</button></td>
     </tr>`).join('');
+
+  document.querySelectorAll('.check-fila').forEach(chk=>{
+    chk.addEventListener('change', ()=>{
+      if(chk.checked) state.seleccionados.add(chk.dataset.id);
+      else state.seleccionados.delete(chk.dataset.id);
+      actualizarBarraSeleccion();
+    });
+  });
+  actualizarBarraSeleccion();
 }
+
+function actualizarBarraSeleccion(){
+  const barra = document.getElementById('barraSeleccion');
+  const n = state.seleccionados.size;
+  document.getElementById('countSeleccionados').textContent = n;
+  barra.classList.toggle('hidden', n === 0);
+}
+
+document.getElementById('btnSeleccionarInscritos').addEventListener('click', ()=>{
+  colaboradoresFiltrados().filter(c=> c.estadoInscripcion==='inscrito').forEach(c=> state.seleccionados.add(c.id));
+  renderColaboradores();
+  toast('Colaboradores ya inscritos seleccionados', 'ok');
+});
+document.getElementById('btnLimpiarSeleccion').addEventListener('click', ()=>{
+  state.seleccionados.clear();
+  renderColaboradores();
+});
+document.getElementById('checkTodos').addEventListener('change', (e)=>{
+  const regs = colaboradoresFiltrados().filter(c=> c.estadoInscripcion==='inscrito');
+  if(e.target.checked) regs.forEach(c=> state.seleccionados.add(c.id));
+  else regs.forEach(c=> state.seleccionados.delete(c.id));
+  renderColaboradores();
+});
+document.getElementById('btnAprobarSeleccion').addEventListener('click', async ()=>{
+  const ids = [...state.seleccionados];
+  if(!ids.length) return;
+  try{
+    await Promise.all(ids.map(id=> db.collection('colaboradores').doc(id).update({
+      estadoSolicitud: 'aprobado',
+      actualizadoEn: firebase.firestore.FieldValue.serverTimestamp(),
+      actualizadoPor: state.correo
+    })));
+    toast(`${ids.length} colaborador(es) marcados como Aprobado`, 'ok');
+    state.seleccionados.clear();
+  }catch(err){
+    toast('Error al actualizar la selección: ' + (err.message||err.code), 'err');
+  }
+});
 
 ['buscarColaborador'].forEach(id=> document.getElementById(id).addEventListener('input', debounce(renderColaboradores, 200)));
 ['filtroTipo','filtroEstadoInsc','filtroArea','filtroEstadoSolicitud'].forEach(id=> document.getElementById(id).addEventListener('change', renderColaboradores));
@@ -841,11 +981,18 @@ document.getElementById('btnExportarJson').addEventListener('click', ()=>{
   toast('Exportado a JSON', 'ok');
 });
 document.getElementById('btnExportarCsv').addEventListener('click', ()=>{
-  const regs = colaboradoresFiltrados();
-  const cols = ['nombreCompleto','email','telefono','dpi','esEstudiante','estadoInscripcion','carne','carrera','profesion','motivo','areaInteres','disponibilidad','modalidadPreferida','nivelExperiencia','cvUrl','estadoSolicitud'];
+  const regs = state.seleccionados.size ? colaboradoresFiltrados().filter(c=> state.seleccionados.has(c.id)) : colaboradoresFiltrados();
+  const cols = [
+    ['nombreCompleto','Nombre completo'], ['email','Correo'], ['telefono','Teléfono'], ['dpi','DPI'],
+    ['esEstudiante','Estudiante UPANA'], ['estadoInscripcion','Estado académico'], ['carne','ID Estudiantil'],
+    ['carrera','Facultad / Carrera'], ['profesion','Profesión / Ocupación'], ['motivo','Motivo de interés'],
+    ['areaInteres','Área de interés'], ['disponibilidad','Disponibilidad'], ['modalidadPreferida','Modalidad preferida'],
+    ['nivelExperiencia','Nivel de experiencia'], ['cvUrl','CV / Portafolio'], ['estadoSolicitud','Estado de solicitud']
+  ];
   const escapar = (v)=> '"' + String(v==null? '' : v).replace(/"/g,'""') + '"';
-  const filas = [cols.join(',')].concat(regs.map(r=> cols.map(c=> escapar(r[c])).join(',')));
-  descargarArchivo('colaboradores.csv', filas.join('\n'), 'text/csv');
+  const filas = [cols.map(c=>c[1]).join(',')].concat(regs.map(r=> cols.map(c=> escapar(c[0]==='estadoSolicitud' ? (ESTADO_SOL_LABELS[r[c[0]]]||r[c[0]]) : r[c[0]])).join(',')));
+  const csv = '\uFEFF' + filas.join('\r\n');
+  descargarArchivo('colaboradores.csv', csv, 'text/csv;charset=utf-8;');
   toast('Exportado a CSV', 'ok');
 });
 
@@ -904,6 +1051,150 @@ document.getElementById('btnGuardarEstado').addEventListener('click', async ()=>
     btn.disabled = false; btn.textContent = 'Guardar estado';
   }
 });
+
+// ================================================================
+// DIPLOMADO EN NEUROEDUCACIÓN — sincronización bidireccional
+// en vivo con el Panel de Colaborador (misma clave de almacenamiento
+// compartido, sin necesidad de recargar la página)
+// ================================================================
+const NEURO_STORAGE_KEY = 'neuroeducacion:leads';
+const neuroStorageDisponible = (typeof window.storage !== 'undefined');
+const stateNeuro = { leads: [], tab: 'interesado', seleccionados: new Set() };
+
+async function cargarNeuroLeads(){
+  if(!neuroStorageDisponible) return [];
+  try{
+    const res = await window.storage.get(NEURO_STORAGE_KEY, true);
+    return res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){ return []; }
+}
+async function guardarNeuroLeads(){
+  if(!neuroStorageDisponible) return;
+  try{ await window.storage.set(NEURO_STORAGE_KEY, JSON.stringify(stateNeuro.leads), true); }
+  catch(e){ toast('No se pudo sincronizar con el Panel de Colaborador.', 'err'); }
+}
+
+function fmtFechaISO(iso){ if(!iso) return '—'; return new Date(iso).toLocaleDateString('es-GT', { day:'2-digit', month:'short', year:'numeric' }); }
+
+function renderNeuro(){
+  const activos = stateNeuro.leads.filter(l=> l.estado === stateNeuro.tab);
+  document.getElementById('countNeuroInteresados').textContent = stateNeuro.leads.filter(l=> l.estado==='interesado').length;
+  document.getElementById('countNeuroInscritos').textContent = stateNeuro.leads.filter(l=> l.estado==='inscrito').length;
+
+  const tbody = document.getElementById('tablaNeuro');
+  const emptyHost = document.getElementById('neuroEmpty');
+  if(!activos.length){
+    tbody.innerHTML = '';
+    emptyHost.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+      <div class="t">Sin registros aún</div>
+      <div class="d">Los leads que se registren desde el Panel de Colaborador aparecerán aquí automáticamente.</div>
+    </div>`;
+    actualizarBarraSeleccionNeuro();
+    return;
+  }
+  emptyHost.innerHTML = '';
+  tbody.innerHTML = activos.map(l=> `
+    <tr>
+      <td>${l.estado==='inscrito' ? `<input type="checkbox" class="check-neuro" data-id="${l.id}" ${stateNeuro.seleccionados.has(l.id)?'checked':''}>` : ''}</td>
+      <td><div style="font-weight:600;">${l.nombre}</div></td>
+      <td><span class="badge badge-gray">${l.facultad}</span></td>
+      <td style="font-size:12.5px; color:var(--text-muted);">${l.correo} · ${l.telefono}</td>
+      <td class="mono" style="white-space:nowrap;">${fmtFechaISO(l.estado==='inscrito' ? l.fechaInscripcion : l.fechaRegistro)}</td>
+      <td>${l.estado==='interesado'
+          ? `<button class="btn btn-primary btn-sm" onclick="marcarNeuroInscrito('${l.id}')">Marcar inscrito</button>`
+          : `<button class="btn btn-ghost btn-sm" onclick="marcarNeuroInteresado('${l.id}')">Regresar</button>`}</td>
+    </tr>`).join('');
+
+  document.querySelectorAll('.check-neuro').forEach(chk=>{
+    chk.addEventListener('change', ()=>{
+      if(chk.checked) stateNeuro.seleccionados.add(chk.dataset.id);
+      else stateNeuro.seleccionados.delete(chk.dataset.id);
+      actualizarBarraSeleccionNeuro();
+    });
+  });
+  actualizarBarraSeleccionNeuro();
+}
+
+function actualizarBarraSeleccionNeuro(){
+  const n = stateNeuro.seleccionados.size;
+  document.getElementById('countSeleccionadosNeuro').textContent = n;
+  document.getElementById('barraSeleccionNeuro').classList.toggle('hidden', n === 0);
+}
+
+async function marcarNeuroInscrito(id){
+  const l = stateNeuro.leads.find(x=> x.id === id);
+  if(!l) return;
+  l.estado = 'inscrito';
+  l.fechaInscripcion = new Date().toISOString();
+  renderNeuro();
+  await guardarNeuroLeads();
+  toast(`${l.nombre.split(' ')[0]} fue movido a Inscritos`, 'ok');
+}
+async function marcarNeuroInteresado(id){
+  const l = stateNeuro.leads.find(x=> x.id === id);
+  if(!l) return;
+  l.estado = 'interesado';
+  renderNeuro();
+  await guardarNeuroLeads();
+  toast(`${l.nombre.split(' ')[0]} regresó a Interesados`, 'ok');
+}
+
+document.getElementById('tabNeuroInteresados').addEventListener('click', ()=>{
+  stateNeuro.tab = 'interesado';
+  document.getElementById('tabNeuroInteresados').className = 'btn btn-primary btn-sm';
+  document.getElementById('tabNeuroInscritos').className = 'btn btn-ghost btn-sm';
+  renderNeuro();
+});
+document.getElementById('tabNeuroInscritos').addEventListener('click', ()=>{
+  stateNeuro.tab = 'inscrito';
+  document.getElementById('tabNeuroInscritos').className = 'btn btn-primary btn-sm';
+  document.getElementById('tabNeuroInteresados').className = 'btn btn-ghost btn-sm';
+  renderNeuro();
+});
+document.getElementById('btnSeleccionarNeuroInscritos').addEventListener('click', ()=>{
+  stateNeuro.leads.filter(l=> l.estado==='inscrito').forEach(l=> stateNeuro.seleccionados.add(l.id));
+  stateNeuro.tab = 'inscrito';
+  document.getElementById('tabNeuroInscritos').className = 'btn btn-primary btn-sm';
+  document.getElementById('tabNeuroInteresados').className = 'btn btn-ghost btn-sm';
+  renderNeuro();
+  toast('Leads ya inscritos seleccionados', 'ok');
+});
+document.getElementById('btnLimpiarSeleccionNeuro').addEventListener('click', ()=>{
+  stateNeuro.seleccionados.clear();
+  renderNeuro();
+});
+document.getElementById('btnRevertirSeleccionNeuro').addEventListener('click', async ()=>{
+  const ids = [...stateNeuro.seleccionados];
+  if(!ids.length) return;
+  ids.forEach(id=>{
+    const l = stateNeuro.leads.find(x=> x.id === id);
+    if(l) l.estado = 'interesado';
+  });
+  stateNeuro.seleccionados.clear();
+  renderNeuro();
+  await guardarNeuroLeads();
+  toast(`${ids.length} lead(s) regresados a Interesados`, 'ok');
+});
+
+let neuroSyncInterval = null;
+function iniciarSyncNeuro(){
+  if(neuroSyncInterval) return;
+  neuroSyncInterval = setInterval(async ()=>{
+    if(!state.user) return;
+    const frescos = await cargarNeuroLeads();
+    if(JSON.stringify(frescos) !== JSON.stringify(stateNeuro.leads)){
+      stateNeuro.leads = frescos;
+      if(state.currentView === 'neuro') renderNeuro();
+    }
+  }, 4000);
+}
+function detenerSyncNeuro(){ if(neuroSyncInterval){ clearInterval(neuroSyncInterval); neuroSyncInterval = null; } }
+
+(async function initNeuro(){
+  stateNeuro.leads = await cargarNeuroLeads();
+  iniciarSyncNeuro();
+})();
 </script>
 </body>
 </html>
