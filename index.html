@@ -475,6 +475,19 @@ tbody tr:last-child td{ border-bottom:none; }
           </div>
         </div>
         <div class="card">
+          <div class="panel-head" style="padding:0 0 16px; border-bottom:1px solid var(--border); margin-bottom:16px;">
+            <div>
+              <h3 style="font-size:15.5px;">Registros por día</h3>
+              <div class="sub" style="font-size:12px; color:var(--text-muted); margin-top:3px;">Últimos 14 días · sincronizado en vivo con el Panel de Colaborador</div>
+            </div>
+            <div style="display:flex; gap:14px; font-size:12px; color:var(--text-muted);">
+              <span style="display:flex; align-items:center; gap:6px;"><span style="width:9px; height:9px; border-radius:3px; background:var(--azul); display:inline-block;"></span>Interesados</span>
+              <span style="display:flex; align-items:center; gap:6px;"><span style="width:9px; height:9px; border-radius:3px; background:var(--verde); display:inline-block;"></span>Inscritos</span>
+            </div>
+          </div>
+          <div id="graficaNeuro"></div>
+        </div>
+        <div class="card">
           <div class="toolbar">
             <button class="btn btn-primary btn-sm" id="tabNeuroInteresados" data-neuro-tab="interesado">Interesados <span id="countNeuroInteresados">0</span></button>
             <button class="btn btn-ghost btn-sm" id="tabNeuroInscritos" data-neuro-tab="inscrito">Inscritos <span id="countNeuroInscritos">0</span></button>
@@ -1052,11 +1065,7 @@ document.getElementById('btnGuardarEstado').addEventListener('click', async ()=>
   }
 });
 
-// ================================================================
-// DIPLOMADO EN NEUROEDUCACIÓN — sincronización bidireccional
-// en vivo con el Panel de Colaborador (misma clave de almacenamiento
-// compartido, sin necesidad de recargar la página)
-// ================================================================
+
 const NEURO_STORAGE_KEY = 'neuroeducacion:leads';
 const neuroStorageDisponible = (typeof window.storage !== 'undefined');
 const stateNeuro = { leads: [], tab: 'interesado', seleccionados: new Set() };
@@ -1066,7 +1075,7 @@ async function cargarNeuroLeads(){
   try{
     const res = await window.storage.get(NEURO_STORAGE_KEY, true);
     return res && res.value ? JSON.parse(res.value) : [];
-  }catch(e){ return []; }
+  }catch(e){ return null; /* null = falló la lectura, NO significa "vacío" */ }
 }
 async function guardarNeuroLeads(){
   if(!neuroStorageDisponible) return;
@@ -1077,6 +1086,7 @@ async function guardarNeuroLeads(){
 function fmtFechaISO(iso){ if(!iso) return '—'; return new Date(iso).toLocaleDateString('es-GT', { day:'2-digit', month:'short', year:'numeric' }); }
 
 function renderNeuro(){
+  renderGraficaNeuro();
   const activos = stateNeuro.leads.filter(l=> l.estado === stateNeuro.tab);
   document.getElementById('countNeuroInteresados').textContent = stateNeuro.leads.filter(l=> l.estado==='interesado').length;
   document.getElementById('countNeuroInscritos').textContent = stateNeuro.leads.filter(l=> l.estado==='inscrito').length;
@@ -1183,18 +1193,76 @@ function iniciarSyncNeuro(){
   neuroSyncInterval = setInterval(async ()=>{
     if(!state.user) return;
     const frescos = await cargarNeuroLeads();
+    if(frescos === null) return; // la lectura falló: no tocar lo que ya está en pantalla
     if(JSON.stringify(frescos) !== JSON.stringify(stateNeuro.leads)){
       stateNeuro.leads = frescos;
       if(state.currentView === 'neuro') renderNeuro();
+      renderGraficaNeuro();
     }
   }, 4000);
 }
 function detenerSyncNeuro(){ if(neuroSyncInterval){ clearInterval(neuroSyncInterval); neuroSyncInterval = null; } }
 
 (async function initNeuro(){
-  stateNeuro.leads = await cargarNeuroLeads();
+  const cargados = await cargarNeuroLeads();
+  stateNeuro.leads = cargados || [];
   iniciarSyncNeuro();
 })();
+
+
+function renderGraficaNeuro(){
+  const host = document.getElementById('graficaNeuro');
+  if(!host) return;
+  const DIAS = 14;
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const claves = [];
+  for(let i = DIAS - 1; i >= 0; i--){
+    const d = new Date(hoy); d.setDate(d.getDate() - i);
+    claves.push(d.toISOString().slice(0,10));
+  }
+  const porDia = {};
+  claves.forEach(k => porDia[k] = { interesados: 0, inscritos: 0 });
+  (stateNeuro.leads || []).forEach(l => {
+    const kReg = (l.fechaRegistro || '').slice(0,10);
+    if(porDia[kReg]) porDia[kReg].interesados++;
+    if(l.fechaInscripcion){
+      const kIns = l.fechaInscripcion.slice(0,10);
+      if(porDia[kIns]) porDia[kIns].inscritos++;
+    }
+  });
+  const valores = claves.map(k => porDia[k]);
+  const max = Math.max(1, ...valores.map(v => v.interesados + v.inscritos));
+  const total = valores.reduce((a,v)=> a + v.interesados + v.inscritos, 0);
+
+  if(total === 0){
+    host.innerHTML = `<div class="empty-state" style="padding:22px 0;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>
+      <div class="t">Aún no hay registros en los últimos 14 días</div>
+      <div class="d">Se sincroniza automáticamente con el Panel de Colaborador.</div>
+    </div>`;
+    return;
+  }
+  const W = 700, H = 160, padBottom = 26, padTop = 6, barW = Math.min(28, (W / DIAS) - 10), gap = (W - barW*DIAS) / (DIAS + 1);
+  let bars = '';
+  claves.forEach((k, i) => {
+    const v = porDia[k];
+    const x = gap + i * (barW + gap);
+    const hInt = (v.interesados / max) * (H - padBottom - padTop);
+    const hIns = (v.inscritos / max) * (H - padBottom - padTop);
+    const yBase = H - padBottom;
+    const fecha = new Date(k + 'T00:00:00');
+    const label = fecha.toLocaleDateString('es-GT', { day:'2-digit', month:'2-digit' });
+    const mostrarLabel = (i % Math.ceil(DIAS/7) === 0) || i === DIAS-1;
+    bars += `
+      <g>
+        ${v.inscritos ? `<rect x="${x}" y="${yBase - hIns}" width="${barW}" height="${Math.max(hIns,1)}" rx="3" fill="var(--verde)"><title>${label} · ${v.inscritos} inscrito(s)</title></rect>` : ''}
+        ${v.interesados ? `<rect x="${x}" y="${yBase - hIns - hInt}" width="${barW}" height="${Math.max(hInt,1)}" rx="3" fill="var(--azul)" opacity="${v.inscritos ? .85 : 1}"><title>${label} · ${v.interesados} interesado(s)</title></rect>` : ''}
+        ${(!v.inscritos && !v.interesados) ? `<rect x="${x}" y="${yBase-2}" width="${barW}" height="2" rx="1" fill="var(--border-strong)"/>` : ''}
+        ${mostrarLabel ? `<text x="${x + barW/2}" y="${H - 6}" text-anchor="middle" font-size="9.5" fill="var(--text-muted)">${label}</text>` : ''}
+      </g>`;
+  });
+  host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%; height:${H}px; overflow:visible;">${bars}</svg>`;
+}
 </script>
 </body>
 </html>
