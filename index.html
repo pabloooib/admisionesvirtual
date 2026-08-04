@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panel de Administración · Colaboradores · UPANA Virtual</title>
+<title>Panel de Administración · Diplomado en Neuroeducación · UPANA Virtual</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,8 +14,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 
 <style>
 :root{
@@ -73,6 +71,16 @@ a{ color:inherit; text-decoration:none; }
 .hidden{ display:none !important; }
 .scroll-thin::-webkit-scrollbar{ width:8px; height:8px; }
 .scroll-thin::-webkit-scrollbar-thumb{ background:var(--border-strong); border-radius:8px; }
+@media (prefers-reduced-motion: reduce){ *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+
+/* ---------- ENTRANCE / DYNAMISM ---------- */
+@keyframes cardIn{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+@keyframes rowIn{ from{ opacity:0; transform:translateY(4px); } to{ opacity:1; transform:translateY(0); } }
+@keyframes fadeSection{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+@keyframes shimmer{ 0%{ background-position:100% 0; } 100%{ background-position:0 0; } }
+.fade-section{ animation:fadeSection .35s var(--ease); }
+.skel{ height:14px; border-radius:6px; background:linear-gradient(90deg, var(--surface-2) 25%, var(--border-strong) 37%, var(--surface-2) 63%); background-size:400% 100%; animation:shimmer 1.4s ease infinite; }
+.skel-row td{ padding:12px; border-bottom:1px solid var(--border); }
 
 .loading-veil{ position:fixed; inset:0; z-index:999; background:var(--bg); display:flex; align-items:center; justify-content:center; transition:opacity .3s var(--ease); }
 .spinner{ width:44px; height:44px; border-radius:50%; border:3px solid var(--border); border-top-color:var(--verde); animation:spin .9s linear infinite; }
@@ -89,7 +97,9 @@ a{ color:inherit; text-decoration:none; }
 .login-aside::before{
   content:""; position:absolute; inset:-40% -20% auto auto; width:520px; height:520px; border-radius:50%;
   background:radial-gradient(circle at 30% 30%, rgba(141,198,63,.30), transparent 65%); filter:blur(4px);
+  animation:blobDrift 9s ease-in-out infinite;
 }
+@keyframes blobDrift{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(-18px,22px) scale(1.06); } }
 .brand-row{ display:flex; align-items:center; gap:14px; position:relative; z-index:1; }
 .brand-badge{ width:44px; height:44px; border-radius:12px; background:var(--verde); display:flex; align-items:center; justify-content:center; color:#0C0E12; font-weight:800; font-family:var(--font-display); font-size:17px; box-shadow:var(--shadow-sm); flex-shrink:0; }
 .brand-badge.logo-mark{ position:relative; background:none; box-shadow:none; }
@@ -140,8 +150,10 @@ a{ color:inherit; text-decoration:none; }
 .nav-group{ margin-bottom:18px; }
 .nav-label{ font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-muted); padding:0 10px 8px; }
 .nav-item{ display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:var(--radius-sm); font-size:13.8px; font-weight:600; color:var(--text-muted); cursor:pointer; transition:all .16s var(--ease); margin-bottom:2px; }
-.nav-item svg{ width:18px; height:18px; flex-shrink:0; }
-.nav-item:hover{ background:var(--surface); color:var(--text); }
+.nav-item svg{ width:18px; height:18px; flex-shrink:0; transition:transform .16s var(--ease); }
+.nav-item:hover{ background:var(--surface); color:var(--text); transform:translateX(2px); }
+.nav-item:hover svg{ transform:scale(1.08); }
+.icon-btn.spinning svg{ animation:spin .6s var(--ease); }
 .nav-item.active{ background:linear-gradient(90deg, rgba(141,198,63,.16), rgba(141,198,63,.02)); color:var(--verde-suave); border:1px solid rgba(141,198,63,.25); }
 .sidebar-foot{ margin-top:auto; padding-top:14px; border-top:1px solid var(--border); }
 .sidebar-signature{ font-size:10.6px; color:var(--text-muted); text-align:center; padding-top:12px; opacity:.6; letter-spacing:.02em; }
@@ -188,7 +200,8 @@ a{ color:inherit; text-decoration:none; }
 .welcome-banner .d{ font-size:12.5px; color:var(--text-muted); margin-top:2px; }
 .welcome-banner .x{ margin-left:auto; cursor:pointer; color:var(--text-muted); }
 
-.card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow-sm); }
+.card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow-sm); opacity:0; transform:translateY(10px); animation:cardIn .45s var(--ease) forwards; }
+.two-col-charts .card:nth-of-type(2){ animation-delay:.07s; }
 .section-title{ font-family:var(--font-display); font-weight:700; font-size:16px; margin-bottom:16px; }
 
 .field{ margin-bottom:16px; }
@@ -205,8 +218,37 @@ textarea{ min-height:90px; resize:vertical; }
 .stat-cards{ display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-bottom:20px; }
 @media (max-width:1180px){ .stat-cards{ grid-template-columns:repeat(3,1fr); } }
 @media (max-width:640px){ .stat-cards{ grid-template-columns:repeat(2,1fr); } }
-.stat-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow-sm); transition:transform .2s var(--ease); }
-.stat-card:hover{ transform:translateY(-3px); }
+
+/* ---------- NOTICE / CUPO ---------- */
+.notice-card{ position:relative; overflow:hidden; background:linear-gradient(120deg, rgba(141,198,63,.14), rgba(76,141,224,.06)); border:1px solid rgba(141,198,63,.35); border-radius:var(--radius-lg); padding:18px 22px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; opacity:0; transform:translateY(10px); animation:cardIn .5s var(--ease) forwards; }
+.notice-card .n-icon{ width:42px; height:42px; border-radius:12px; background:var(--verde-glow); color:var(--verde-suave); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.notice-card .n-icon svg{ width:21px; height:21px; }
+.notice-card .n-text{ flex:1; min-width:220px; }
+.notice-card .n-title{ font-family:var(--font-display); font-weight:700; font-size:14.5px; }
+.notice-card .n-desc{ font-size:12.6px; color:var(--text-muted); margin-top:3px; line-height:1.5; }
+.notice-progress{ min-width:200px; }
+.notice-progress .bar-track{ width:100%; height:8px; border-radius:99px; background:var(--surface-2); overflow:hidden; }
+.notice-progress .bar-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg, var(--verde-600), var(--verde-suave)); transition:width .6s var(--ease); }
+.notice-progress .bar-label{ font-size:11.3px; color:var(--text-muted); margin-top:6px; display:flex; justify-content:space-between; }
+
+/* ---------- KPI ---------- */
+.kpi-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
+@media (max-width:980px){ .kpi-grid{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:560px){ .kpi-grid{ grid-template-columns:1fr; } }
+.kpi-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; box-shadow:var(--shadow); position:relative; overflow:hidden; opacity:0; transform:translateY(12px); animation:cardIn .5s var(--ease) forwards; transition:border-color .2s var(--ease), transform .2s var(--ease); }
+.kpi-card:hover{ border-color:var(--border-strong); transform:translateY(-2px); }
+.kpi-card:nth-of-type(1){ animation-delay:.02s; } .kpi-card:nth-of-type(2){ animation-delay:.08s; }
+.kpi-card:nth-of-type(3){ animation-delay:.14s; } .kpi-card:nth-of-type(4){ animation-delay:.2s; }
+.kpi-card .k-icon{ width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+.kpi-card .k-icon svg{ width:18px; height:18px; }
+.kpi-card .k-label{ font-size:12px; color:var(--text-muted); font-weight:600; }
+.kpi-card .k-value{ font-family:var(--font-display); font-size:30px; font-weight:800; margin-top:4px; }
+.kpi-card .k-trend{ font-size:11.5px; margin-top:8px; color:var(--text-muted); }
+.stat-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow-sm); transition:transform .2s var(--ease), border-color .2s var(--ease); opacity:0; transform:translateY(12px); animation:cardIn .5s var(--ease) forwards; }
+.stat-card:hover{ transform:translateY(-3px); border-color:var(--border-strong); }
+.stat-card:nth-of-type(1){ animation-delay:.02s; } .stat-card:nth-of-type(2){ animation-delay:.06s; }
+.stat-card:nth-of-type(3){ animation-delay:.10s; } .stat-card:nth-of-type(4){ animation-delay:.14s; }
+.stat-card:nth-of-type(5){ animation-delay:.18s; } .stat-card:nth-of-type(6){ animation-delay:.22s; }
 .stat-card .lbl{ font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; font-weight:600; }
 .stat-card .val{ font-family:var(--font-display); font-size:24px; font-weight:700; margin-top:6px; }
 .stat-card .val.verde{ color:var(--verde-suave); }
@@ -219,6 +261,7 @@ textarea{ min-height:90px; resize:vertical; }
 table{ width:100%; border-collapse:collapse; font-size:13.2px; }
 thead th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); font-weight:700; padding:0 12px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
 tbody td{ padding:12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+tbody tr{ opacity:0; animation:rowIn .4s var(--ease) forwards; transition:background .14s var(--ease); }
 tbody tr:hover{ background:var(--bg-alt); }
 tbody tr:last-child td{ border-bottom:none; }
 .table-wrap{ overflow-x:auto; }
@@ -297,14 +340,14 @@ tbody tr:last-child td{ border-bottom:none; }
     <div class="brand-row">
       <div class="brand-badge logo-mark"></div>
       <div>
-        <div class="brand-name">Panel de Colaboradores</div>
+        <div class="brand-name">Diplomado en Neuroeducación</div>
         <div class="brand-sub">UPANA Virtual · Administración</div>
       </div>
     </div>
     <div class="login-hero">
-      <span class="eyebrow">Gestión de colaboradores</span>
-      <h1>Revisa, filtra y da seguimiento a cada postulación.</h1>
-      <p>Consulta en tiempo real las postulaciones de colaboradores, cambia su estado y exporta la información cuando la necesites.</p>
+      <span class="eyebrow">Control de interesados e inscritos</span>
+      <h1>Sigue en tiempo real quién está interesado y quién ya se inscribió.</h1>
+      <p>Consulta en vivo los leads registrados desde el Panel de Colaborador, cambia su estado y exporta la información cuando la necesites.</p>
     </div>
     <div style="position:relative; z-index:1; font-size:12px; opacity:.55;">Creada por PABLOOIB · © <span id="yearTag"></span> UPANA Virtual</div>
   </div>
@@ -330,24 +373,16 @@ tbody tr:last-child td{ border-bottom:none; }
     <div class="brand-row">
       <div class="brand-badge logo-mark"></div>
       <div>
-        <div class="brand-name">Colaboradores</div>
+        <div class="brand-name">Neuroeducación</div>
         <div class="brand-sub" style="text-transform:none; letter-spacing:0;">Panel de Administración</div>
       </div>
     </div>
 
     <div class="nav-group">
-      <div class="nav-label">Panel</div>
-      <div class="nav-item" data-view="dashboard">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6"/><rect x="12" y="7" width="3" height="10"/><rect x="17" y="13" width="3" height="4"/></svg>
-        Dashboard
-      </div>
-      <div class="nav-item" data-view="colaboradores">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Colaboradores
-      </div>
+      <div class="nav-label">Diplomado en Neuroeducación</div>
       <div class="nav-item" data-view="neuro">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5Z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/></svg>
-        Diplomado · Neuroeducación
+        Interesados e inscritos
       </div>
     </div>
 
@@ -366,8 +401,8 @@ tbody tr:last-child td{ border-bottom:none; }
         <div class="icon-btn hamburger" id="btnHamburger">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </div>
-        <div class="topbar-title" id="viewTitle">Dashboard
-          <span class="muted" id="viewSubtitle">Panorama general de colaboradores</span>
+        <div class="topbar-title" id="viewTitle">Diplomado · Neuroeducación
+          <span class="muted" id="viewSubtitle">Control de interesados e inscritos</span>
         </div>
       </div>
       <div class="topbar-right">
@@ -394,94 +429,68 @@ tbody tr:last-child td{ border-bottom:none; }
 
     <div id="viewsHost" class="scroll-thin" style="overflow-y:auto;">
 
-      <!-- ---- VIEW: Dashboard ---- -->
-      <section class="view" id="view-dashboard">
-        <div class="stat-cards" id="dashboardCards"></div>
-        <div class="two-col-charts" style="margin-bottom:20px;">
-          <div class="card">
-            <div class="section-title">Colaboradores por área de interés</div>
-            <div class="chart-box"><canvas id="chartArea"></canvas></div>
-          </div>
-          <div class="card">
-            <div class="section-title">Estado de solicitud</div>
-            <div class="chart-box"><canvas id="chartEstadoSolicitud"></canvas></div>
-          </div>
-        </div>
-        <div class="two-col-charts">
-          <div class="card">
-            <div class="section-title">Estudiantes vs. Nuevos</div>
-            <div class="chart-box"><canvas id="chartTipo"></canvas></div>
-          </div>
-          <div class="card">
-            <div class="section-title">Postulaciones — últimos 7 días</div>
-            <div class="chart-box"><canvas id="chartTendencia"></canvas></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ---- VIEW: Colaboradores ---- -->
-      <section class="view hidden" id="view-colaboradores">
-        <div class="card">
-          <div class="toolbar">
-            <input type="text" id="buscarColaborador" class="grow" placeholder="Buscar por nombre, correo o DPI…">
-            <select id="filtroTipo" style="max-width:170px;">
-              <option value="">Estudiante / Nuevo</option>
-              <option value="estudiante">Estudiante</option>
-              <option value="nuevo">Nuevo</option>
-            </select>
-            <select id="filtroEstadoInsc" style="max-width:170px;">
-              <option value="">Inscrito / No</option>
-              <option value="inscrito">Inscrito</option>
-              <option value="no_inscrito">No inscrito</option>
-            </select>
-            <select id="filtroArea" style="max-width:190px;">
-              <option value="">Todas las áreas</option>
-              <option value="Apoyo Académico">Apoyo Académico</option>
-              <option value="Logística">Logística</option>
-              <option value="Marketing / Redes">Marketing / Redes</option>
-              <option value="Tutoría">Tutoría</option>
-              <option value="Eventos">Eventos</option>
-              <option value="Otro">Otro</option>
-            </select>
-            <select id="filtroEstadoSolicitud" style="max-width:190px;">
-              <option value="">Todos los estados</option>
-              <option value="pendiente">Pendiente</option>
-              <option value="en_entrevista">En entrevista</option>
-              <option value="aprobado">Aprobado</option>
-              <option value="rechazado">Rechazado</option>
-            </select>
-            <button class="btn btn-ghost btn-sm" id="btnSeleccionarInscritos">Seleccionar inscritos</button>
-            <button class="btn btn-ghost btn-sm" id="btnLimpiarFiltros">Limpiar</button>
-            <button class="btn btn-ghost btn-sm" id="btnExportarCsv">Exportar CSV</button>
-            <button class="btn btn-ghost btn-sm" id="btnExportarJson">Exportar JSON</button>
-          </div>
-          <div class="toolbar hidden" id="barraSeleccion" style="background:var(--surface-2); border:1px solid rgba(141,198,63,.3); border-radius:var(--radius-sm); padding:10px 14px;">
-            <span style="font-size:12.8px; font-weight:600;"><span id="countSeleccionados">0</span> colaborador(es) inscrito(s) seleccionado(s)</span>
-            <button class="btn btn-primary btn-sm" id="btnAprobarSeleccion" style="margin-left:auto;">Marcar como Aprobado</button>
-            <button class="btn btn-ghost btn-sm" id="btnLimpiarSeleccion">Deseleccionar</button>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th style="width:34px;"><input type="checkbox" id="checkTodos"></th><th>Fecha</th><th>Colaborador</th><th>Tipo</th><th>Estado académico</th><th>Área de interés</th><th>Solicitud</th><th></th></tr></thead>
-              <tbody id="tablaColaboradores"></tbody>
-            </table>
-          </div>
-          <div id="colaboradoresEmpty"></div>
-        </div>
-      </section>
-
-      <!-- ---- VIEW: Diplomado en Neuroeducación (sincronizado con el Panel de Colaborador) ---- -->
-      <section class="view hidden" id="view-neuro">
+      <!-- ---- VIEW: Diplomado en Neuroeducación (sincronizado en vivo con el Panel de Colaborador) ---- -->
+      <section class="view" id="view-neuro">
         <div class="card" style="margin-bottom:18px; display:flex; align-items:center; gap:14px;">
           <div class="ic" style="width:40px; height:40px; border-radius:10px; background:var(--verde-glow); display:flex; align-items:center; justify-content:center; color:var(--verde-suave); flex-shrink:0;">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5Z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/></svg>
           </div>
           <div>
             <div class="t" style="font-weight:700; font-size:14.5px;">Sincronizado en vivo con el Panel de Colaborador</div>
-            <div class="d" style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">Los cambios que realices aquí se reflejan automáticamente allá, y viceversa — sin recargar la página.</div>
+            <div class="d" style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">Todo dato ingresado desde el Panel de Colaborador llega aquí automáticamente, y viceversa — sin recargar la página.</div>
           </div>
         </div>
-        <div class="card">
+
+        <div class="notice-card" style="margin-bottom:20px;">
+          <div class="n-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </div>
+          <div class="n-text">
+            <div class="n-title">Diplomado en Neuroeducación — inicia el 1 de septiembre de 2026</div>
+            <div class="n-desc" id="noticeDescAdmin">Sujeto a completar el cupo mínimo de 25 estudiantes inscritos.</div>
+          </div>
+          <div class="notice-progress">
+            <div class="bar-track"><div class="bar-fill" id="cupoBarAdmin" style="width:0%;"></div></div>
+            <div class="bar-label"><span id="cupoTextoAdmin">0 / 25 inscritos</span><span id="cupoPctAdmin">0%</span></div>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="k-icon" style="background:var(--azul-bg); color:var(--azul);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </div>
+            <div class="k-label">Interesados</div>
+            <div class="k-value" id="kInteresadosAdmin" data-val="0">0</div>
+            <div class="k-trend" id="kInteresadosTrendAdmin">sin datos aún</div>
+          </div>
+          <div class="kpi-card">
+            <div class="k-icon" style="background:var(--success-bg); color:var(--verde-suave);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 12 6 6L20 6"/></svg>
+            </div>
+            <div class="k-label">Inscritos</div>
+            <div class="k-value" id="kInscritosAdmin" data-val="0">0</div>
+            <div class="k-trend" id="kInscritosTrendAdmin">sin datos aún</div>
+          </div>
+          <div class="kpi-card">
+            <div class="k-icon" style="background:var(--warning-bg); color:var(--warning);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>
+            </div>
+            <div class="k-label">Tasa de conversión</div>
+            <div class="k-value" id="kTasaAdmin" data-val="0">0%</div>
+            <div class="k-trend">interesados → inscritos</div>
+          </div>
+          <div class="kpi-card">
+            <div class="k-icon" style="background:var(--morado-bg,var(--verde-glow)); color:var(--morado,var(--verde-suave));">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </div>
+            <div class="k-label">Registrados hoy</div>
+            <div class="k-value" id="kHoyAdmin" data-val="0">0</div>
+            <div class="k-trend" id="kHoyFechaAdmin">—</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:18px;">
           <div class="panel-head" style="padding:0 0 16px; border-bottom:1px solid var(--border); margin-bottom:16px;">
             <div>
               <h3 style="font-size:15.5px;">Registros por día</h3>
@@ -517,57 +526,7 @@ tbody tr:last-child td{ border-bottom:none; }
 
     </div>
 
-    <div class="app-footer">Panel de Administración de Colaboradores — Creada por PABLOOIB · © <span id="yearTag2"></span> UPANA Virtual</div>
-  </div>
-</div>
-
-<!-- ================= MODAL: Detalle del colaborador ================= -->
-<div class="modal-overlay" id="modalColaborador">
-  <div class="modal">
-    <div class="modal-head">
-      <h3>Expediente del colaborador</h3>
-      <div class="icon-btn" id="btnCerrarModal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></div>
-    </div>
-
-    <div class="detalle-grid">
-      <div class="detalle-item"><div class="k">Nombre</div><div class="v" id="detNombre">—</div></div>
-      <div class="detalle-item"><div class="k">Correo</div><div class="v" id="detEmail">—</div></div>
-      <div class="detalle-item"><div class="k">Teléfono</div><div class="v" id="detTelefono">—</div></div>
-      <div class="detalle-item"><div class="k">DPI</div><div class="v" id="detDpi">—</div></div>
-      <div class="detalle-item"><div class="k">Tipo</div><div class="v" id="detTipo">—</div></div>
-      <div class="detalle-item"><div class="k">Estado académico</div><div class="v" id="detEstadoAcad">—</div></div>
-      <div class="detalle-item"><div class="k">ID Estudiantil</div><div class="v" id="detCarne">—</div></div>
-      <div class="detalle-item"><div class="k">Facultad / Carrera</div><div class="v" id="detCarrera">—</div></div>
-      <div class="detalle-item"><div class="k">Profesión / Ocupación</div><div class="v" id="detProfesion">—</div></div>
-      <div class="detalle-item"><div class="k">Área de interés</div><div class="v" id="detArea">—</div></div>
-      <div class="detalle-item"><div class="k">Disponibilidad</div><div class="v" id="detDisponibilidad">—</div></div>
-      <div class="detalle-item"><div class="k">Modalidad preferida</div><div class="v" id="detModalidad">—</div></div>
-      <div class="detalle-item"><div class="k">Nivel de experiencia</div><div class="v" id="detExperiencia">—</div></div>
-      <div class="detalle-item"><div class="k">Fecha de registro</div><div class="v" id="detFecha">—</div></div>
-    </div>
-    <div class="field">
-      <label>Motivo de interés</label>
-      <div class="v" id="detMotivo" style="font-weight:500; color:var(--text-muted); line-height:1.5;">—</div>
-    </div>
-    <div class="field">
-      <label>CV / LinkedIn / Portafolio</label>
-      <div class="v" id="detCv" style="font-weight:500; color:var(--text-muted);">—</div>
-    </div>
-
-    <div class="field">
-      <label for="selectCambiarEstado">Cambiar estado de la solicitud</label>
-      <select id="selectCambiarEstado">
-        <option value="pendiente">Pendiente</option>
-        <option value="en_entrevista">En entrevista</option>
-        <option value="aprobado">Aprobado</option>
-        <option value="rechazado">Rechazado</option>
-      </select>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn btn-primary" id="btnGuardarEstado">Guardar estado</button>
-      <button class="btn btn-ghost" id="btnCerrarModal2">Cerrar</button>
-    </div>
+    <div class="app-footer">Panel de Administración · Diplomado en Neuroeducación — Creada por PABLOOIB · © <span id="yearTag2"></span> UPANA Virtual</div>
   </div>
 </div>
 
@@ -614,16 +573,11 @@ const msProvider = new firebase.auth.OAuthProvider('microsoft.com');
 msProvider.setCustomParameters({ prompt: 'select_account' });
 
 // ================================================================
-// ESTADO / ETIQUETAS
+// ESTADO
 // ================================================================
-const AREA_OPCIONES = ['Apoyo Académico','Logística','Marketing / Redes','Tutoría','Eventos','Otro'];
-const ESTADO_SOL_LABELS = { pendiente:'Pendiente', en_entrevista:'En entrevista', aprobado:'Aprobado', rechazado:'Rechazado' };
-const ESTADO_SOL_BADGE = { pendiente:'badge-gray', en_entrevista:'badge-azul', aprobado:'badge-verde', rechazado:'badge-red' };
-
 const state = {
   user: null, correo: null, nombre: null,
-  colaboradores: [], currentView: 'dashboard', abierto: null,
-  seleccionados: new Set()
+  currentView: 'neuro'
 };
 
 // ================================================================
@@ -654,6 +608,23 @@ function iniciales(nombre){
 }
 function debounce(fn, ms){
   let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=> fn(...args), ms); };
+}
+function animarContador(el, valorFinal, duracion=650){
+  if(!el) return;
+  const inicio = Number(el.dataset.val || 0);
+  const t0 = performance.now();
+  function paso(t){
+    const p = Math.min(1, (t - t0) / duracion);
+    const val = Math.round(inicio + (valorFinal - inicio) * (1 - Math.pow(1 - p, 3)));
+    el.textContent = val.toLocaleString('es-GT');
+    if(p < 1) requestAnimationFrame(paso); else el.dataset.val = valorFinal;
+  }
+  requestAnimationFrame(paso);
+}
+function flashSync(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.remove('sync-flash'); void el.offsetWidth; el.classList.add('sync-flash');
 }
 
 // ================================================================
@@ -732,8 +703,7 @@ function entrarAlPanel(){
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('appShell').classList.remove('hidden');
   pintarUsuario();
-  cambiarVista('dashboard');
-  suscribirColaboradores();
+  cambiarVista('neuro');
 }
 
 function pintarUsuario(){
@@ -751,16 +721,17 @@ document.getElementById('topAvatar').addEventListener('click', (e)=>{ e.stopProp
 document.addEventListener('click', ()=> userMenu.classList.remove('open'));
 
 const VIEW_META = {
-  'dashboard': { title:'Dashboard', sub:'Panorama general de colaboradores' },
-  'colaboradores': { title:'Colaboradores', sub:'Consulta y gestiona todas las postulaciones' },
-  'neuro': { title:'Diplomado · Neuroeducación', sub:'Sincronizado en vivo con el Panel de Colaborador' }
+  'neuro': { title:'Diplomado · Neuroeducación', sub:'Control de interesados e inscritos' }
 };
 
 function cambiarVista(view){
   state.currentView = view;
   document.querySelectorAll('.view').forEach(v=> v.classList.add('hidden'));
   const target = document.getElementById('view-' + view);
-  if(target) target.classList.remove('hidden');
+  if(target){
+    target.classList.remove('hidden');
+    target.classList.remove('fade-section'); void target.offsetWidth; target.classList.add('fade-section');
+  }
   document.querySelectorAll('.nav-item[data-view]').forEach(n=> n.classList.toggle('active', n.dataset.view === view));
   const meta = VIEW_META[view] || {};
   document.getElementById('viewTitle').childNodes[0].nodeValue = meta.title || '';
@@ -768,9 +739,11 @@ function cambiarVista(view){
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebarOverlay').classList.remove('open');
 
-  if(view === 'dashboard') renderDashboard();
-  if(view === 'colaboradores') renderColaboradores();
   if(view === 'neuro') renderNeuro();
+}
+function marcarEnVivo(activo){
+  const badge = document.getElementById('liveBadge');
+  if(badge) badge.classList.toggle('off', !activo);
 }
 document.querySelectorAll('.nav-item[data-view]').forEach(item=>{
   item.addEventListener('click', ()=> cambiarVista(item.dataset.view));
@@ -783,301 +756,14 @@ document.getElementById('sidebarOverlay').addEventListener('click', ()=>{
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebarOverlay').classList.remove('open');
 });
-document.getElementById('btnRefresh').addEventListener('click', ()=> cambiarVista(state.currentView));
+document.getElementById('btnRefresh').addEventListener('click', ()=>{
+  const btn = document.getElementById('btnRefresh');
+  btn.classList.remove('spinning'); void btn.offsetWidth; btn.classList.add('spinning');
+  cambiarVista(state.currentView);
+  toast('Panel actualizado', 'ok');
+});
 document.getElementById('yearTag').textContent = new Date().getFullYear();
 document.getElementById('yearTag2').textContent = new Date().getFullYear();
-
-// ================================================================
-// SUSCRIPCIÓN EN VIVO A COLABORADORES
-// ================================================================
-let unsubColaboradores = null;
-function marcarEnVivo(activo){
-  const badge = document.getElementById('liveBadge');
-  if(badge) badge.classList.toggle('off', !activo);
-}
-function suscribirColaboradores(){
-  if(unsubColaboradores) return;
-  unsubColaboradores = db.collection('colaboradores').limit(3000).onSnapshot(snap=>{
-    marcarEnVivo(true);
-    const lista = [];
-    snap.forEach(doc=> lista.push({ id: doc.id, ...doc.data() }));
-    state.colaboradores = ordenarPorFechaDesc(lista, 'fechaRegistro');
-    if(state.currentView === 'dashboard') renderDashboard();
-    if(state.currentView === 'colaboradores') renderColaboradores();
-  }, err=> { console.error('Error al leer colaboradores:', err); marcarEnVivo(false); });
-}
-
-// ================================================================
-// DASHBOARD
-// ================================================================
-let chartAreaRef=null, chartEstadoSolRef=null, chartTipoRef=null, chartTendenciaRef=null;
-function renderDashboard(){
-  const regs = state.colaboradores;
-  const total = regs.length;
-  const estudiantes = regs.filter(c=> c.esEstudiante === true).length;
-  const nuevos = total - estudiantes;
-  const inscritos = regs.filter(c=> c.estadoInscripcion === 'inscrito').length;
-  const noInscritos = total - inscritos;
-  const pendientes = regs.filter(c=> c.estadoSolicitud === 'pendiente').length;
-  const aprobados = regs.filter(c=> c.estadoSolicitud === 'aprobado').length;
-  const pct = (n)=> total ? Math.round((n/total)*100) : 0;
-
-  document.getElementById('dashboardCards').innerHTML = `
-    <div class="stat-card stat-pop"><div class="lbl">Total colaboradores</div><div class="val">${total}</div></div>
-    <div class="stat-card stat-pop"><div class="lbl">Estudiantes</div><div class="val verde">${estudiantes}</div><div class="sub">${pct(estudiantes)}% del total</div></div>
-    <div class="stat-card stat-pop"><div class="lbl">Nuevos</div><div class="val">${nuevos}</div><div class="sub">${pct(nuevos)}% del total</div></div>
-    <div class="stat-card stat-pop"><div class="lbl">Inscritos</div><div class="val verde">${inscritos}</div><div class="sub">${pct(inscritos)}% · No inscritos ${pct(noInscritos)}%</div></div>
-    <div class="stat-card stat-pop"><div class="lbl">Pendientes</div><div class="val">${pendientes}</div></div>
-    <div class="stat-card stat-pop"><div class="lbl">Aprobados</div><div class="val verde">${aprobados}</div></div>
-  `;
-
-  const porArea = {};
-  AREA_OPCIONES.forEach(a=> porArea[a] = 0);
-  regs.forEach(c=>{
-    (c.areaInteres||'').split(',').map(s=> s.trim()).filter(Boolean).forEach(a=>{
-      porArea[a] = (porArea[a]||0) + 1;
-    });
-  });
-  const ctxArea = document.getElementById('chartArea');
-  if(chartAreaRef) chartAreaRef.destroy();
-  chartAreaRef = new Chart(ctxArea, {
-    type:'bar',
-    data:{ labels:Object.keys(porArea), datasets:[{ label:'Colaboradores', data:Object.values(porArea), backgroundColor:'#8DC63F', borderRadius:6, maxBarThickness:42 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ precision:0, color:'#939BA8' }, grid:{ color:'#262C36' } }, x:{ ticks:{ color:'#939BA8', font:{ size:10 } }, grid:{ display:false } } } }
-  });
-
-  const ordenEstadoSol = ['pendiente','en_entrevista','aprobado','rechazado'];
-  const porEstadoSol = {};
-  ordenEstadoSol.forEach(e=> porEstadoSol[ESTADO_SOL_LABELS[e]] = 0);
-  regs.forEach(c=>{ const e = ESTADO_SOL_LABELS[c.estadoSolicitud] || 'Pendiente'; porEstadoSol[e] = (porEstadoSol[e]||0)+1; });
-  const ctxEstadoSol = document.getElementById('chartEstadoSolicitud');
-  if(chartEstadoSolRef) chartEstadoSolRef.destroy();
-  chartEstadoSolRef = new Chart(ctxEstadoSol, {
-    type:'doughnut',
-    data:{ labels:Object.keys(porEstadoSol), datasets:[{ data:Object.values(porEstadoSol), backgroundColor:['#9AA3AF','#4C8DE0','#4FAE5E','#E0605A'] }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:11 }, color:'#939BA8' } } } }
-  });
-
-  const ctxTipo = document.getElementById('chartTipo');
-  if(chartTipoRef) chartTipoRef.destroy();
-  chartTipoRef = new Chart(ctxTipo, {
-    type:'doughnut',
-    data:{ labels:['Estudiantes','Nuevos'], datasets:[{ data:[estudiantes, nuevos], backgroundColor:['#4FAE5E','#4C8DE0'] }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:11 }, color:'#939BA8' } } } }
-  });
-
-  const dias = [];
-  for(let i=6;i>=0;i--){ const d = new Date(); d.setDate(d.getDate()-i); dias.push(d); }
-  const conteoDias = dias.map(d=> regs.filter(c=>{
-    if(!c.fechaRegistro || !c.fechaRegistro.toDate) return false;
-    return c.fechaRegistro.toDate().toDateString() === d.toDateString();
-  }).length);
-  const labelsDias = dias.map(d=> d.toLocaleDateString('es-GT',{ weekday:'short', day:'numeric' }));
-  const ctxTend = document.getElementById('chartTendencia');
-  if(chartTendenciaRef) chartTendenciaRef.destroy();
-  chartTendenciaRef = new Chart(ctxTend, {
-    type:'line',
-    data:{ labels: labelsDias, datasets:[{ label:'Colaboradores', data: conteoDias, borderColor:'#8DC63F', backgroundColor:'rgba(141,198,63,.15)', fill:true, tension:.35 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ precision:0, color:'#939BA8' }, grid:{ color:'#262C36' } }, x:{ ticks:{ color:'#939BA8' }, grid:{ display:false } } } }
-  });
-}
-
-// ================================================================
-// TABLA DE COLABORADORES (búsqueda y filtros)
-// ================================================================
-function colaboradoresFiltrados(){
-  const texto = document.getElementById('buscarColaborador').value.trim().toLowerCase();
-  const tipo = document.getElementById('filtroTipo').value;
-  const estadoInsc = document.getElementById('filtroEstadoInsc').value;
-  const area = document.getElementById('filtroArea').value;
-  const estadoSol = document.getElementById('filtroEstadoSolicitud').value;
-  return state.colaboradores.filter(c=>{
-    if(texto && !((c.nombreCompleto||'').toLowerCase().includes(texto) || (c.email||'').toLowerCase().includes(texto) || (c.dpi||'').includes(texto))) return false;
-    if(tipo === 'estudiante' && c.esEstudiante !== true) return false;
-    if(tipo === 'nuevo' && c.esEstudiante !== false) return false;
-    if(estadoInsc && c.estadoInscripcion !== estadoInsc) return false;
-    if(area && !((c.areaInteres||'').includes(area))) return false;
-    if(estadoSol && (c.estadoSolicitud||'pendiente') !== estadoSol) return false;
-    return true;
-  });
-}
-
-function renderColaboradores(){
-  const regs = colaboradoresFiltrados();
-  const tbody = document.getElementById('tablaColaboradores');
-  const emptyHost = document.getElementById('colaboradoresEmpty');
-  if(!regs.length){
-    tbody.innerHTML = '';
-    emptyHost.innerHTML = `<div class="empty-state">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
-      <div class="t">Sin resultados</div>
-      <div class="d">Ajusta la búsqueda o los filtros aplicados.</div>
-    </div>`;
-    return;
-  }
-  emptyHost.innerHTML = '';
-  tbody.innerHTML = regs.map(c=> `
-    <tr>
-      <td>${c.estadoInscripcion==='inscrito' ? `<input type="checkbox" class="check-fila" data-id="${c.id}" ${state.seleccionados.has(c.id)?'checked':''}>` : ''}</td>
-      <td class="mono" style="white-space:nowrap;">${fmtFecha(c.fechaRegistro)}</td>
-      <td>
-        <div style="font-weight:600;">${c.nombreCompleto||'—'}</div>
-        <div style="font-size:12px; color:var(--text-muted);">${c.email||'—'}</div>
-      </td>
-      <td><span class="badge ${c.esEstudiante ? 'badge-verde' : 'badge-azul'}">${c.esEstudiante ? 'Estudiante' : 'Nuevo'}</span></td>
-      <td><span class="badge ${c.estadoInscripcion==='inscrito' ? 'badge-verde' : 'badge-gray'}">${c.estadoInscripcion==='inscrito' ? 'Inscrito' : 'No inscrito'}</span></td>
-      <td style="max-width:200px; white-space:normal;">${c.areaInteres||'—'}</td>
-      <td><span class="badge ${ESTADO_SOL_BADGE[c.estadoSolicitud]||'badge-gray'}">${ESTADO_SOL_LABELS[c.estadoSolicitud]||'Pendiente'}</span></td>
-      <td><button class="btn btn-ghost btn-sm" onclick="abrirDetalle('${c.id}')">Ver</button></td>
-    </tr>`).join('');
-
-  document.querySelectorAll('.check-fila').forEach(chk=>{
-    chk.addEventListener('change', ()=>{
-      if(chk.checked) state.seleccionados.add(chk.dataset.id);
-      else state.seleccionados.delete(chk.dataset.id);
-      actualizarBarraSeleccion();
-    });
-  });
-  actualizarBarraSeleccion();
-}
-
-function actualizarBarraSeleccion(){
-  const barra = document.getElementById('barraSeleccion');
-  const n = state.seleccionados.size;
-  document.getElementById('countSeleccionados').textContent = n;
-  barra.classList.toggle('hidden', n === 0);
-}
-
-document.getElementById('btnSeleccionarInscritos').addEventListener('click', ()=>{
-  colaboradoresFiltrados().filter(c=> c.estadoInscripcion==='inscrito').forEach(c=> state.seleccionados.add(c.id));
-  renderColaboradores();
-  toast('Colaboradores ya inscritos seleccionados', 'ok');
-});
-document.getElementById('btnLimpiarSeleccion').addEventListener('click', ()=>{
-  state.seleccionados.clear();
-  renderColaboradores();
-});
-document.getElementById('checkTodos').addEventListener('change', (e)=>{
-  const regs = colaboradoresFiltrados().filter(c=> c.estadoInscripcion==='inscrito');
-  if(e.target.checked) regs.forEach(c=> state.seleccionados.add(c.id));
-  else regs.forEach(c=> state.seleccionados.delete(c.id));
-  renderColaboradores();
-});
-document.getElementById('btnAprobarSeleccion').addEventListener('click', async ()=>{
-  const ids = [...state.seleccionados];
-  if(!ids.length) return;
-  try{
-    await Promise.all(ids.map(id=> db.collection('colaboradores').doc(id).update({
-      estadoSolicitud: 'aprobado',
-      actualizadoEn: firebase.firestore.FieldValue.serverTimestamp(),
-      actualizadoPor: state.correo
-    })));
-    toast(`${ids.length} colaborador(es) marcados como Aprobado`, 'ok');
-    state.seleccionados.clear();
-  }catch(err){
-    toast('Error al actualizar la selección: ' + (err.message||err.code), 'err');
-  }
-});
-
-['buscarColaborador'].forEach(id=> document.getElementById(id).addEventListener('input', debounce(renderColaboradores, 200)));
-['filtroTipo','filtroEstadoInsc','filtroArea','filtroEstadoSolicitud'].forEach(id=> document.getElementById(id).addEventListener('change', renderColaboradores));
-document.getElementById('btnLimpiarFiltros').addEventListener('click', ()=>{
-  document.getElementById('buscarColaborador').value = '';
-  document.getElementById('filtroTipo').value = '';
-  document.getElementById('filtroEstadoInsc').value = '';
-  document.getElementById('filtroArea').value = '';
-  document.getElementById('filtroEstadoSolicitud').value = '';
-  renderColaboradores();
-});
-
-// ================================================================
-// EXPORTAR CSV / JSON
-// ================================================================
-function descargarArchivo(nombre, contenido, tipo){
-  const blob = new Blob([contenido], { type: tipo });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = nombre;
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-}
-document.getElementById('btnExportarJson').addEventListener('click', ()=>{
-  const regs = colaboradoresFiltrados().map(({id, ...resto})=> resto);
-  descargarArchivo('colaboradores.json', JSON.stringify(regs, null, 2), 'application/json');
-  toast('Exportado a JSON', 'ok');
-});
-document.getElementById('btnExportarCsv').addEventListener('click', ()=>{
-  const regs = state.seleccionados.size ? colaboradoresFiltrados().filter(c=> state.seleccionados.has(c.id)) : colaboradoresFiltrados();
-  const cols = [
-    ['nombreCompleto','Nombre completo'], ['email','Correo'], ['telefono','Teléfono'], ['dpi','DPI'],
-    ['esEstudiante','Estudiante UPANA'], ['estadoInscripcion','Estado académico'], ['carne','ID Estudiantil'],
-    ['carrera','Facultad / Carrera'], ['profesion','Profesión / Ocupación'], ['motivo','Motivo de interés'],
-    ['areaInteres','Área de interés'], ['disponibilidad','Disponibilidad'], ['modalidadPreferida','Modalidad preferida'],
-    ['nivelExperiencia','Nivel de experiencia'], ['cvUrl','CV / Portafolio'], ['estadoSolicitud','Estado de solicitud']
-  ];
-  const escapar = (v)=> '"' + String(v==null? '' : v).replace(/"/g,'""') + '"';
-  const filas = [cols.map(c=>c[1]).join(',')].concat(regs.map(r=> cols.map(c=> escapar(c[0]==='estadoSolicitud' ? (ESTADO_SOL_LABELS[r[c[0]]]||r[c[0]]) : r[c[0]])).join(',')));
-  const csv = '\uFEFF' + filas.join('\r\n');
-  descargarArchivo('colaboradores.csv', csv, 'text/csv;charset=utf-8;');
-  toast('Exportado a CSV', 'ok');
-});
-
-// ================================================================
-// MODAL: Detalle + cambio de estado
-// ================================================================
-const modalColaborador = document.getElementById('modalColaborador');
-function abrirDetalle(id){
-  const c = state.colaboradores.find(x=> x.id === id);
-  if(!c) return;
-  state.abierto = c;
-
-  document.getElementById('detNombre').textContent = c.nombreCompleto||'—';
-  document.getElementById('detEmail').textContent = c.email||'—';
-  document.getElementById('detTelefono').textContent = c.telefono||'—';
-  document.getElementById('detDpi').textContent = c.dpi||'—';
-  document.getElementById('detTipo').textContent = c.esEstudiante ? 'Estudiante UPANA' : 'Nuevo';
-  document.getElementById('detEstadoAcad').textContent = c.estadoInscripcion==='inscrito' ? 'Inscrito' : 'No inscrito';
-  document.getElementById('detCarne').textContent = c.carne||'—';
-  document.getElementById('detCarrera').textContent = c.carrera||'—';
-  document.getElementById('detProfesion').textContent = c.profesion||'—';
-  document.getElementById('detArea').textContent = c.areaInteres||'—';
-  document.getElementById('detDisponibilidad').textContent = c.disponibilidad||'—';
-  document.getElementById('detModalidad').textContent = c.modalidadPreferida||'—';
-  document.getElementById('detExperiencia').textContent = c.nivelExperiencia||'—';
-  document.getElementById('detFecha').textContent = fmtFecha(c.fechaRegistro);
-  document.getElementById('detMotivo').textContent = c.motivo || 'Sin motivo registrado.';
-  const cvEl = document.getElementById('detCv');
-  if(c.cvUrl){ cvEl.innerHTML = `<a href="${c.cvUrl}" target="_blank" rel="noopener" style="color:var(--verde-suave); text-decoration:underline;">${c.cvUrl}</a>`; }
-  else { cvEl.textContent = 'No proporcionado'; }
-  document.getElementById('selectCambiarEstado').value = c.estadoSolicitud || 'pendiente';
-
-  modalColaborador.classList.add('open');
-}
-function cerrarModal(){ modalColaborador.classList.remove('open'); state.abierto = null; }
-document.getElementById('btnCerrarModal').addEventListener('click', cerrarModal);
-document.getElementById('btnCerrarModal2').addEventListener('click', cerrarModal);
-
-document.getElementById('btnGuardarEstado').addEventListener('click', async ()=>{
-  if(!state.abierto) return;
-  const nuevoEstado = document.getElementById('selectCambiarEstado').value;
-  const btn = document.getElementById('btnGuardarEstado');
-  btn.disabled = true; btn.textContent = 'Guardando…';
-  try{
-    await db.collection('colaboradores').doc(state.abierto.id).update({
-      estadoSolicitud: nuevoEstado,
-      actualizadoEn: firebase.firestore.FieldValue.serverTimestamp(),
-      actualizadoPor: state.correo
-    });
-    toast('Estado actualizado correctamente', 'ok');
-    cerrarModal();
-  }catch(err){
-    console.error(err);
-    toast('Error al actualizar: ' + (err.message||err.code), 'err');
-  }finally{
-    btn.disabled = false; btn.textContent = 'Guardar estado';
-  }
-});
-
 
 const NEURO_COLLECTION = 'neuroeducacion_leads';
 const stateNeuro = { leads: [], tab: 'interesado', seleccionados: new Set() };
@@ -1090,7 +776,36 @@ async function guardarLeadNeuro(lead){
 
 function fmtFechaISO(iso){ if(!iso) return '—'; return new Date(iso).toLocaleDateString('es-GT', { day:'2-digit', month:'short', year:'numeric' }); }
 
+const CUPO_DIPLOMADO = 25;
+
+function renderNeuroKPIs(){
+  const total = stateNeuro.leads;
+  const interesados = total.filter(l=> l.estado === 'interesado').length;
+  const inscritos = total.filter(l=> l.estado === 'inscrito').length;
+  const tasa = (interesados + inscritos) ? Math.round((inscritos/(interesados+inscritos))*100) : 0;
+  const hoy = new Date().toDateString();
+  const registradosHoy = total.filter(l=> l.fechaRegistro && new Date(l.fechaRegistro).toDateString() === hoy).length;
+
+  animarContador(document.getElementById('kInteresadosAdmin'), interesados);
+  animarContador(document.getElementById('kInscritosAdmin'), inscritos);
+  animarContador(document.getElementById('kHoyAdmin'), registradosHoy);
+  document.getElementById('kTasaAdmin').textContent = tasa + '%';
+  document.getElementById('kTasaAdmin').dataset.val = tasa;
+  document.getElementById('kInteresadosTrendAdmin').textContent = interesados ? interesados + ' en seguimiento activo' : 'aún no hay leads';
+  document.getElementById('kInscritosTrendAdmin').textContent = inscritos ? inscritos + ' procesos completados' : 'aún no hay inscritos';
+  document.getElementById('kHoyFechaAdmin').textContent = new Date().toLocaleDateString('es-GT', { day:'2-digit', month:'long', year:'numeric' });
+
+  const pct = Math.min(100, Math.round((inscritos / CUPO_DIPLOMADO) * 100));
+  document.getElementById('cupoBarAdmin').style.width = pct + '%';
+  document.getElementById('cupoTextoAdmin').textContent = `${inscritos} / ${CUPO_DIPLOMADO} inscritos`;
+  document.getElementById('cupoPctAdmin').textContent = pct + '%';
+  document.getElementById('noticeDescAdmin').textContent = inscritos >= CUPO_DIPLOMADO
+    ? '¡Cupo mínimo alcanzado! El diplomado quedará confirmado para el 1 de septiembre de 2026.'
+    : `Sujeto a completar el cupo mínimo de ${CUPO_DIPLOMADO} estudiantes inscritos. Faltan ${CUPO_DIPLOMADO - inscritos} para confirmar el inicio.`;
+}
+
 function renderNeuro(){
+  renderNeuroKPIs();
   renderGraficaNeuro();
   const activos = stateNeuro.leads.filter(l=> l.estado === stateNeuro.tab);
   document.getElementById('countNeuroInteresados').textContent = stateNeuro.leads.filter(l=> l.estado==='interesado').length;
@@ -1109,8 +824,8 @@ function renderNeuro(){
     return;
   }
   emptyHost.innerHTML = '';
-  tbody.innerHTML = activos.map(l=> `
-    <tr>
+  tbody.innerHTML = activos.map((l,i)=> `
+    <tr style="animation-delay:${Math.min(i*25,300)}ms;">
       <td>${l.estado==='inscrito' ? `<input type="checkbox" class="check-neuro" data-id="${l.id}" ${stateNeuro.seleccionados.has(l.id)?'checked':''}>` : ''}</td>
       <td><div style="font-weight:600;">${l.nombre}</div></td>
       <td><span class="badge badge-gray">${l.facultad}</span></td>
@@ -1198,7 +913,7 @@ function iniciarSyncNeuro(){
   unsubNeuro = db.collection(NEURO_COLLECTION).onSnapshot(snap => {
     marcarEnVivo(true);
     stateNeuro.leads = snap.docs.map(d => d.data()).sort((a,b)=> new Date(b.fechaRegistro||0) - new Date(a.fechaRegistro||0));
-    if(state.currentView === 'neuro') renderNeuro();
+    if(state.currentView === 'neuro'){ renderNeuro(); flashSync('tablaNeuro'); }
     renderGraficaNeuro();
   }, err => {
     console.error(err);
@@ -1207,9 +922,6 @@ function iniciarSyncNeuro(){
   });
 }
 function detenerSyncNeuro(){ if(unsubNeuro){ unsubNeuro(); unsubNeuro = null; } }
-
-iniciarSyncNeuro();
-
 
 function renderGraficaNeuro(){
   const host = document.getElementById('graficaNeuro');
