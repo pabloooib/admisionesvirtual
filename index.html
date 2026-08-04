@@ -229,6 +229,8 @@ textarea{ min-height:90px; resize:vertical; }
 .notice-progress{ min-width:200px; }
 .notice-progress .bar-track{ width:100%; height:8px; border-radius:99px; background:var(--surface-2); overflow:hidden; }
 .notice-progress .bar-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg, var(--verde-600), var(--verde-suave)); transition:width .6s var(--ease); }
+.mini-bar-track{ width:100%; height:7px; border-radius:99px; background:var(--bg-alt); overflow:hidden; }
+.mini-bar-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg, var(--verde-600), var(--verde-suave)); transition:width .6s var(--ease); }
 .notice-progress .bar-label{ font-size:11.3px; color:var(--text-muted); margin-top:6px; display:flex; justify-content:space-between; }
 
 /* ---------- KPI ---------- */
@@ -283,8 +285,16 @@ tbody tr:last-child td{ border-bottom:none; }
 .modal-overlay.open{ opacity:1; pointer-events:auto; }
 .modal{ width:100%; max-width:640px; max-height:88vh; overflow-y:auto; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); padding:26px; transform:translateY(10px) scale(.98); transition:transform .2s var(--ease); }
 .modal-overlay.open .modal{ transform:translateY(0) scale(1); }
+.modal-body{ margin-bottom:6px; }
+.modal-foot{ display:flex; justify-content:flex-end; gap:10px; margin-top:20px; padding-top:18px; border-top:1px solid var(--border); }
+.form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:2px 18px; }
+.form-grid .detail-full{ grid-column:1 / -1; }
+@media (max-width:560px){ .form-grid{ grid-template-columns:1fr; } }
 .modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
 .modal-head h3{ font-size:18px; }
+.modal-close{ width:30px; height:30px; border-radius:8px; border:1px solid var(--border-strong); background:transparent; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.modal-close:hover{ background:var(--surface-2); color:var(--text); }
+.modal-close svg{ width:16px; height:16px; }
 .modal-actions{ display:flex; gap:10px; margin-top:6px; }
 .modal-actions .btn{ flex:1; }
 
@@ -493,6 +503,16 @@ tbody tr:last-child td{ border-bottom:none; }
         <div class="card" style="margin-bottom:18px;">
           <div class="panel-head" style="padding:0 0 16px; border-bottom:1px solid var(--border); margin-bottom:16px;">
             <div>
+              <h3 style="font-size:15.5px;">Desglose por facultad</h3>
+              <div class="sub" style="font-size:12px; color:var(--text-muted); margin-top:3px;">Interesados e inscritos agrupados por facultad</div>
+            </div>
+          </div>
+          <div id="facultadesBreakdown"></div>
+        </div>
+
+        <div class="card" style="margin-bottom:18px;">
+          <div class="panel-head" style="padding:0 0 16px; border-bottom:1px solid var(--border); margin-bottom:16px;">
+            <div>
               <h3 style="font-size:15.5px;">Registros por día</h3>
               <div class="sub" style="font-size:12px; color:var(--text-muted); margin-top:3px;">Últimos 14 días · sincronizado en vivo con el Panel de Colaborador</div>
             </div>
@@ -523,6 +543,62 @@ tbody tr:last-child td{ border-bottom:none; }
           <div id="neuroEmpty"></div>
         </div>
       </section>
+
+      <!-- ---- MODAL: Editar lead ---- -->
+      <div class="modal-overlay" id="modalEditarNeuro">
+        <div class="modal">
+          <div class="modal-head">
+            <h3>Editar lead</h3>
+            <button class="modal-close" id="btnCerrarEditarNeuro">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-grid">
+              <div class="field detail-full">
+                <label>Nombre completo</label>
+                <input type="text" id="eNombre">
+              </div>
+              <div class="field">
+                <label>Facultad</label>
+                <select id="eFacultad">
+                  <option>Educación</option>
+                  <option>Teología</option>
+                  <option>Humanidades</option>
+                  <option>Económicas</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Correo electrónico</label>
+                <input type="email" id="eCorreo">
+              </div>
+              <div class="field">
+                <label>Teléfono</label>
+                <input type="tel" id="eTelefono">
+              </div>
+              <div class="field">
+                <label>Carrera / profesión</label>
+                <input type="text" id="eCarrera">
+              </div>
+              <div class="field detail-full">
+                <label>Enlace de Zoho</label>
+                <input type="url" id="eZoho" placeholder="https://meeting.zoho.com/...">
+              </div>
+              <div class="field detail-full">
+                <label>Estado del lead</label>
+                <select id="eEstado">
+                  <option value="interesado">Interesado</option>
+                  <option value="inscrito">Inscrito</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn btn-ghost" id="btnCancelarEditarNeuro">Cancelar</button>
+            <button class="btn btn-primary" id="btnGuardarEditarNeuro">Guardar cambios</button>
+          </div>
+        </div>
+      </div>
 
     </div>
 
@@ -766,7 +842,7 @@ document.getElementById('yearTag').textContent = new Date().getFullYear();
 document.getElementById('yearTag2').textContent = new Date().getFullYear();
 
 const NEURO_COLLECTION = 'neuroeducacion_leads';
-const stateNeuro = { leads: [], tab: 'interesado', seleccionados: new Set() };
+const stateNeuro = { leads: [], tab: 'interesado', seleccionados: new Set(), abierto: null };
 let unsubNeuro = null;
 
 async function guardarLeadNeuro(lead){
@@ -807,6 +883,7 @@ function renderNeuroKPIs(){
 function renderNeuro(){
   renderNeuroKPIs();
   renderGraficaNeuro();
+  renderFacultades();
   const activos = stateNeuro.leads.filter(l=> l.estado === stateNeuro.tab);
   document.getElementById('countNeuroInteresados').textContent = stateNeuro.leads.filter(l=> l.estado==='interesado').length;
   document.getElementById('countNeuroInscritos').textContent = stateNeuro.leads.filter(l=> l.estado==='inscrito').length;
@@ -827,13 +904,16 @@ function renderNeuro(){
   tbody.innerHTML = activos.map((l,i)=> `
     <tr style="animation-delay:${Math.min(i*25,300)}ms;">
       <td>${l.estado==='inscrito' ? `<input type="checkbox" class="check-neuro" data-id="${l.id}" ${stateNeuro.seleccionados.has(l.id)?'checked':''}>` : ''}</td>
-      <td><div style="font-weight:600;">${l.nombre}</div></td>
+      <td><div style="font-weight:600; cursor:pointer;" onclick="abrirEditarNeuro('${l.id}')">${l.nombre}</div></td>
       <td><span class="badge badge-gray">${l.facultad}</span></td>
       <td style="font-size:12.5px; color:var(--text-muted);">${l.correo} · ${l.telefono}</td>
       <td class="mono" style="white-space:nowrap;">${fmtFechaISO(l.estado==='inscrito' ? l.fechaInscripcion : l.fechaRegistro)}</td>
-      <td>${l.estado==='interesado'
+      <td style="display:flex; gap:6px; flex-wrap:wrap;">
+        ${l.estado==='interesado'
           ? `<button class="btn btn-primary btn-sm" onclick="marcarNeuroInscrito('${l.id}')">Marcar inscrito</button>`
-          : `<button class="btn btn-ghost btn-sm" onclick="marcarNeuroInteresado('${l.id}')">Regresar</button>`}</td>
+          : `<button class="btn btn-ghost btn-sm" onclick="marcarNeuroInteresado('${l.id}')">Regresar</button>`}
+        <button class="btn btn-ghost btn-sm" onclick="abrirEditarNeuro('${l.id}')">Editar</button>
+      </td>
     </tr>`).join('');
 
   document.querySelectorAll('.check-neuro').forEach(chk=>{
@@ -851,6 +931,95 @@ function actualizarBarraSeleccionNeuro(){
   document.getElementById('countSeleccionadosNeuro').textContent = n;
   document.getElementById('barraSeleccionNeuro').classList.toggle('hidden', n === 0);
 }
+
+/* ================================================================
+   Desglose por facultad
+   ================================================================ */
+const FACULTADES = ["Educación","Teología","Humanidades","Económicas"];
+function renderFacultades(){
+  const host = document.getElementById('facultadesBreakdown');
+  if(!host) return;
+  const total = stateNeuro.leads.length;
+  if(!total){
+    host.innerHTML = `<div class="empty-state" style="padding:18px 0;">
+      <div class="t">Aún no hay datos por facultad</div>
+      <div class="d">Aparecerán aquí conforme se registren leads.</div>
+    </div>`;
+    return;
+  }
+  host.innerHTML = `<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px;">
+    ${FACULTADES.map(f => {
+      const leadsF = stateNeuro.leads.filter(l => l.facultad === f);
+      const interesados = leadsF.filter(l => l.estado === 'interesado').length;
+      const inscritos = leadsF.filter(l => l.estado === 'inscrito').length;
+      const totalF = leadsF.length;
+      const pctInscritos = totalF ? Math.round((inscritos/totalF)*100) : 0;
+      return `
+      <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div style="font-weight:700; font-size:13.5px;">${f}</div>
+          <div style="font-size:12px; color:var(--text-muted);">${totalF} lead(s)</div>
+        </div>
+        <div class="bar-track mini-bar-track" style="margin-bottom:8px;"><div class="bar-fill mini-bar-fill" style="width:${pctInscritos}%;"></div></div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted);">
+          <span><span style="color:var(--azul); font-weight:700;">${interesados}</span> interesados</span>
+          <span><span style="color:var(--verde-suave); font-weight:700;">${inscritos}</span> inscritos</span>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+/* ================================================================
+   Modal: editar lead (permite corregir datos ingresados por error)
+   ================================================================ */
+function abrirEditarNeuro(id){
+  const l = stateNeuro.leads.find(x => x.id === id);
+  if(!l) return;
+  stateNeuro.abierto = l;
+  document.getElementById('eNombre').value = l.nombre || '';
+  document.getElementById('eFacultad').value = l.facultad || '';
+  document.getElementById('eCorreo').value = l.correo || '';
+  document.getElementById('eTelefono').value = l.telefono || '';
+  document.getElementById('eCarrera').value = l.carrera || '';
+  document.getElementById('eZoho').value = l.enlaceZoho || '';
+  document.getElementById('eEstado').value = l.estado;
+  document.getElementById('modalEditarNeuro').classList.add('open');
+}
+function cerrarEditarNeuro(){ document.getElementById('modalEditarNeuro').classList.remove('open'); stateNeuro.abierto = null; }
+document.getElementById('btnCerrarEditarNeuro').addEventListener('click', cerrarEditarNeuro);
+document.getElementById('btnCancelarEditarNeuro').addEventListener('click', cerrarEditarNeuro);
+document.getElementById('modalEditarNeuro').addEventListener('click', e => { if(e.target.id==='modalEditarNeuro') cerrarEditarNeuro(); });
+
+document.getElementById('btnGuardarEditarNeuro').addEventListener('click', async () => {
+  if(!stateNeuro.abierto) return;
+  const l = stateNeuro.abierto;
+
+  const nombre = document.getElementById('eNombre').value.trim();
+  const facultad = document.getElementById('eFacultad').value;
+  const correo = document.getElementById('eCorreo').value.trim();
+  const telefono = document.getElementById('eTelefono').value.trim();
+  const carrera = document.getElementById('eCarrera').value.trim();
+  const enlaceZoho = document.getElementById('eZoho').value.trim();
+  const nuevoEstado = document.getElementById('eEstado').value;
+
+  if(!nombre || !correo || !telefono || !facultad){
+    toast('Completa los campos obligatorios (nombre, facultad, correo y teléfono).', 'err');
+    return;
+  }
+
+  l.nombre = nombre; l.facultad = facultad; l.correo = correo;
+  l.telefono = telefono; l.carrera = carrera; l.enlaceZoho = enlaceZoho;
+  if(nuevoEstado !== l.estado){
+    l.estado = nuevoEstado;
+    if(nuevoEstado === 'inscrito' && !l.fechaInscripcion) l.fechaInscripcion = new Date().toISOString();
+  }
+
+  toast('Cambios guardados correctamente', 'ok');
+  cerrarEditarNeuro();
+  renderNeuro();
+  await guardarLeadNeuro(l);
+});
 
 async function marcarNeuroInscrito(id){
   const l = stateNeuro.leads.find(x=> x.id === id);
