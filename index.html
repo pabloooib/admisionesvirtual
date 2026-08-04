@@ -1,6 +1,3 @@
-
-
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -154,6 +151,15 @@ a{ color:inherit; text-decoration:none; }
 .topbar-title{ font-family:var(--font-display); font-weight:700; font-size:17px; display:flex; flex-direction:column; gap:2px; }
 .topbar-title .muted{ font-family:var(--font-body); font-weight:500; font-size:12px; color:var(--text-muted); }
 .topbar-right{ display:flex; align-items:center; gap:12px; }
+.live-badge{ display:flex; align-items:center; gap:7px; font-size:11.8px; font-weight:600; color:var(--verde-suave); background:rgba(141,198,63,.12); border:1px solid rgba(141,198,63,.28); padding:6px 11px; border-radius:99px; transition:all .25s var(--ease); }
+.live-badge.off{ color:var(--text-muted); background:var(--surface-2); border-color:var(--border-strong); }
+.live-dot{ width:7px; height:7px; border-radius:50%; background:var(--verde); box-shadow:0 0 0 0 rgba(141,198,63,.55); animation:liveDotPulse 1.8s ease-out infinite; flex-shrink:0; }
+.live-badge.off .live-dot{ background:var(--text-muted); animation:none; box-shadow:none; }
+@keyframes liveDotPulse{ 0%{ box-shadow:0 0 0 0 rgba(141,198,63,.55); } 70%{ box-shadow:0 0 0 6px rgba(141,198,63,0); } 100%{ box-shadow:0 0 0 0 rgba(141,198,63,0); } }
+@keyframes syncFlash{ 0%{ background:rgba(141,198,63,.10); } 100%{ background:transparent; } }
+.sync-flash{ animation:syncFlash .9s var(--ease); }
+@keyframes statPop{ 0%{ transform:scale(1); } 40%{ transform:scale(1.08); } 100%{ transform:scale(1); } }
+.stat-pop{ animation:statPop .4s var(--ease); }
 .icon-btn{ width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-muted); transition:all .16s var(--ease); }
 .icon-btn:hover{ background:var(--surface-2); color:var(--text); }
 .icon-btn svg{ width:18px; height:18px; }
@@ -365,6 +371,7 @@ tbody tr:last-child td{ border-bottom:none; }
         </div>
       </div>
       <div class="topbar-right">
+        <div class="live-badge" id="liveBadge"><span class="live-dot"></span>En vivo</div>
         <div class="icon-btn" id="btnRefresh" title="Actualizar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 15.3-6.5L21 8M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.3 6.5L3 16m0 5v-5h5"/></svg>
         </div>
@@ -592,13 +599,13 @@ insertarLogo('.logo-mark');
 // FIREBASE
 // ================================================================
 const firebaseConfig = {
-  apiKey: "AIzaSyAdLGsavsans6OmLeyD_9TndcrAObDQgqA",
-  authDomain: "bitacora-3fc27.firebaseapp.com",
-  projectId: "bitacora-3fc27",
-  storageBucket: "bitacora-3fc27.firebasestorage.app",
-  messagingSenderId: "921769640813",
-  appId: "1:921769640813:web:20173a75ebc52230595064",
-  measurementId: "G-R9MPVSH7MW"
+  apiKey: "AIzaSyCu8ZOK-Jc2pg7nqVHOyRqGhwM1MNjZkoE",
+  authDomain: "neuro-e0ce1.firebaseapp.com",
+  projectId: "neuro-e0ce1",
+  storageBucket: "neuro-e0ce1.firebasestorage.app",
+  messagingSenderId: "5242881013",
+  appId: "1:5242881013:web:9db03b47314583634496bc",
+  measurementId: "G-YYY7QSWVYV"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -692,6 +699,7 @@ auth.onAuthStateChanged(async (user)=>{
     state.user = user;
     state.correo = (user.email||'').toLowerCase();
     state.nombre = user.displayName || user.email;
+    iniciarSyncNeuro();
     if(esPrimerLogin){
       esPrimerLogin = false;
       document.getElementById('loginScreen').classList.add('hidden');
@@ -783,15 +791,20 @@ document.getElementById('yearTag2').textContent = new Date().getFullYear();
 // SUSCRIPCIÓN EN VIVO A COLABORADORES
 // ================================================================
 let unsubColaboradores = null;
+function marcarEnVivo(activo){
+  const badge = document.getElementById('liveBadge');
+  if(badge) badge.classList.toggle('off', !activo);
+}
 function suscribirColaboradores(){
   if(unsubColaboradores) return;
   unsubColaboradores = db.collection('colaboradores').limit(3000).onSnapshot(snap=>{
+    marcarEnVivo(true);
     const lista = [];
     snap.forEach(doc=> lista.push({ id: doc.id, ...doc.data() }));
     state.colaboradores = ordenarPorFechaDesc(lista, 'fechaRegistro');
     if(state.currentView === 'dashboard') renderDashboard();
     if(state.currentView === 'colaboradores') renderColaboradores();
-  }, err=> console.error('Error al leer colaboradores:', err));
+  }, err=> { console.error('Error al leer colaboradores:', err); marcarEnVivo(false); });
 }
 
 // ================================================================
@@ -810,12 +823,12 @@ function renderDashboard(){
   const pct = (n)=> total ? Math.round((n/total)*100) : 0;
 
   document.getElementById('dashboardCards').innerHTML = `
-    <div class="stat-card"><div class="lbl">Total colaboradores</div><div class="val">${total}</div></div>
-    <div class="stat-card"><div class="lbl">Estudiantes</div><div class="val verde">${estudiantes}</div><div class="sub">${pct(estudiantes)}% del total</div></div>
-    <div class="stat-card"><div class="lbl">Nuevos</div><div class="val">${nuevos}</div><div class="sub">${pct(nuevos)}% del total</div></div>
-    <div class="stat-card"><div class="lbl">Inscritos</div><div class="val verde">${inscritos}</div><div class="sub">${pct(inscritos)}% · No inscritos ${pct(noInscritos)}%</div></div>
-    <div class="stat-card"><div class="lbl">Pendientes</div><div class="val">${pendientes}</div></div>
-    <div class="stat-card"><div class="lbl">Aprobados</div><div class="val verde">${aprobados}</div></div>
+    <div class="stat-card stat-pop"><div class="lbl">Total colaboradores</div><div class="val">${total}</div></div>
+    <div class="stat-card stat-pop"><div class="lbl">Estudiantes</div><div class="val verde">${estudiantes}</div><div class="sub">${pct(estudiantes)}% del total</div></div>
+    <div class="stat-card stat-pop"><div class="lbl">Nuevos</div><div class="val">${nuevos}</div><div class="sub">${pct(nuevos)}% del total</div></div>
+    <div class="stat-card stat-pop"><div class="lbl">Inscritos</div><div class="val verde">${inscritos}</div><div class="sub">${pct(inscritos)}% · No inscritos ${pct(noInscritos)}%</div></div>
+    <div class="stat-card stat-pop"><div class="lbl">Pendientes</div><div class="val">${pendientes}</div></div>
+    <div class="stat-card stat-pop"><div class="lbl">Aprobados</div><div class="val verde">${aprobados}</div></div>
   `;
 
   const porArea = {};
@@ -1066,21 +1079,13 @@ document.getElementById('btnGuardarEstado').addEventListener('click', async ()=>
 });
 
 
-const NEURO_STORAGE_KEY = 'neuroeducacion:leads';
-const neuroStorageDisponible = (typeof window.storage !== 'undefined');
+const NEURO_COLLECTION = 'neuroeducacion_leads';
 const stateNeuro = { leads: [], tab: 'interesado', seleccionados: new Set() };
+let unsubNeuro = null;
 
-async function cargarNeuroLeads(){
-  if(!neuroStorageDisponible) return [];
-  try{
-    const res = await window.storage.get(NEURO_STORAGE_KEY, true);
-    return res && res.value ? JSON.parse(res.value) : [];
-  }catch(e){ return null; /* null = falló la lectura, NO significa "vacío" */ }
-}
-async function guardarNeuroLeads(){
-  if(!neuroStorageDisponible) return;
-  try{ await window.storage.set(NEURO_STORAGE_KEY, JSON.stringify(stateNeuro.leads), true); }
-  catch(e){ toast('No se pudo sincronizar con el Panel de Colaborador.', 'err'); }
+async function guardarLeadNeuro(lead){
+  try{ await db.collection(NEURO_COLLECTION).doc(lead.id).set(lead, { merge:true }); }
+  catch(e){ toast('No se pudo sincronizar con el Panel de Colaborador: ' + (e.message||e.code), 'err'); }
 }
 
 function fmtFechaISO(iso){ if(!iso) return '—'; return new Date(iso).toLocaleDateString('es-GT', { day:'2-digit', month:'short', year:'numeric' }); }
@@ -1138,7 +1143,7 @@ async function marcarNeuroInscrito(id){
   l.estado = 'inscrito';
   l.fechaInscripcion = new Date().toISOString();
   renderNeuro();
-  await guardarNeuroLeads();
+  await guardarLeadNeuro(l);
   toast(`${l.nombre.split(' ')[0]} fue movido a Inscritos`, 'ok');
 }
 async function marcarNeuroInteresado(id){
@@ -1146,7 +1151,7 @@ async function marcarNeuroInteresado(id){
   if(!l) return;
   l.estado = 'interesado';
   renderNeuro();
-  await guardarNeuroLeads();
+  await guardarLeadNeuro(l);
   toast(`${l.nombre.split(' ')[0]} regresó a Interesados`, 'ok');
 }
 
@@ -1177,37 +1182,33 @@ document.getElementById('btnLimpiarSeleccionNeuro').addEventListener('click', ()
 document.getElementById('btnRevertirSeleccionNeuro').addEventListener('click', async ()=>{
   const ids = [...stateNeuro.seleccionados];
   if(!ids.length) return;
+  const afectados = [];
   ids.forEach(id=>{
     const l = stateNeuro.leads.find(x=> x.id === id);
-    if(l) l.estado = 'interesado';
+    if(l){ l.estado = 'interesado'; afectados.push(l); }
   });
   stateNeuro.seleccionados.clear();
   renderNeuro();
-  await guardarNeuroLeads();
+  await Promise.all(afectados.map(l => guardarLeadNeuro(l)));
   toast(`${ids.length} lead(s) regresados a Interesados`, 'ok');
 });
 
-let neuroSyncInterval = null;
 function iniciarSyncNeuro(){
-  if(neuroSyncInterval) return;
-  neuroSyncInterval = setInterval(async ()=>{
-    if(!state.user) return;
-    const frescos = await cargarNeuroLeads();
-    if(frescos === null) return; // la lectura falló: no tocar lo que ya está en pantalla
-    if(JSON.stringify(frescos) !== JSON.stringify(stateNeuro.leads)){
-      stateNeuro.leads = frescos;
-      if(state.currentView === 'neuro') renderNeuro();
-      renderGraficaNeuro();
-    }
-  }, 4000);
+  if(unsubNeuro) return;
+  unsubNeuro = db.collection(NEURO_COLLECTION).onSnapshot(snap => {
+    marcarEnVivo(true);
+    stateNeuro.leads = snap.docs.map(d => d.data()).sort((a,b)=> new Date(b.fechaRegistro||0) - new Date(a.fechaRegistro||0));
+    if(state.currentView === 'neuro') renderNeuro();
+    renderGraficaNeuro();
+  }, err => {
+    console.error(err);
+    marcarEnVivo(false);
+    toast('Se perdió la conexión en vivo con el Panel de Colaborador.', 'err');
+  });
 }
-function detenerSyncNeuro(){ if(neuroSyncInterval){ clearInterval(neuroSyncInterval); neuroSyncInterval = null; } }
+function detenerSyncNeuro(){ if(unsubNeuro){ unsubNeuro(); unsubNeuro = null; } }
 
-(async function initNeuro(){
-  const cargados = await cargarNeuroLeads();
-  stateNeuro.leads = cargados || [];
-  iniciarSyncNeuro();
-})();
+iniciarSyncNeuro();
 
 
 function renderGraficaNeuro(){
