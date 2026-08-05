@@ -13,6 +13,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
 
 <style>
@@ -274,6 +275,10 @@ tbody tr:last-child td{ border-bottom:none; }
 .badge-gold{ background:var(--warning-bg); color:var(--warning); }
 .badge-gray{ background:var(--gris-estado-bg); color:var(--gris-estado); }
 .badge-red{ background:var(--danger-bg); color:var(--danger); }
+.badge-btn{ cursor:pointer; border:1px solid transparent; transition:all .15s var(--ease); }
+.badge-btn:hover{ filter:brightness(1.15); border-color:currentColor; }
+.id-chip{ font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--verde-suave); background:var(--verde-glow); padding:3px 9px; border-radius:6px; letter-spacing:.02em; }
+.nav-badge-count{ margin-left:auto; font-size:10.5px; font-weight:700; background:var(--surface-2); color:var(--text-muted); padding:2px 7px; border-radius:99px; }
 
 .empty-state{ text-align:center; padding:50px 20px; color:var(--text-muted); }
 .empty-state svg{ width:42px; height:42px; margin-bottom:12px; opacity:.5; }
@@ -393,6 +398,10 @@ tbody tr:last-child td{ border-bottom:none; }
       <div class="nav-item" data-view="neuro">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5Z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/></svg>
         Interesados e inscritos
+      </div>
+      <div class="nav-item" data-view="logins">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+        Accesos al sistema
       </div>
     </div>
 
@@ -527,7 +536,11 @@ tbody tr:last-child td{ border-bottom:none; }
           <div class="toolbar">
             <button class="btn btn-primary btn-sm" id="tabNeuroInteresados" data-neuro-tab="interesado">Interesados <span id="countNeuroInteresados">0</span></button>
             <button class="btn btn-ghost btn-sm" id="tabNeuroInscritos" data-neuro-tab="inscrito">Inscritos <span id="countNeuroInscritos">0</span></button>
-            <button class="btn btn-ghost btn-sm" id="btnSeleccionarNeuroInscritos" style="margin-left:auto;">Seleccionar inscritos</button>
+            <button class="btn btn-ghost btn-sm" id="btnExportarCsvNeuro" style="margin-left:auto;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+              Exportar CSV
+            </button>
+            <button class="btn btn-ghost btn-sm" id="btnSeleccionarNeuroInscritos">Seleccionar inscritos</button>
           </div>
           <div class="toolbar hidden" id="barraSeleccionNeuro" style="background:var(--surface-2); border:1px solid rgba(141,198,63,.3); border-radius:var(--radius-sm); padding:10px 14px;">
             <span style="font-size:12.8px; font-weight:600;"><span id="countSeleccionadosNeuro">0</span> lead(s) inscrito(s) seleccionado(s)</span>
@@ -536,13 +549,45 @@ tbody tr:last-child td{ border-bottom:none; }
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th style="width:34px;"></th><th>Lead</th><th>Facultad</th><th>Correo · Teléfono</th><th>Fecha</th><th></th></tr></thead>
+              <thead id="theadNeuro"><tr><th style="width:34px;"></th><th>Lead</th><th>Facultad</th><th>Correo · Teléfono</th><th>Fecha</th><th></th></tr></thead>
               <tbody id="tablaNeuro"></tbody>
             </table>
           </div>
           <div id="neuroEmpty"></div>
         </div>
       </section>
+
+      <!-- ---- MODAL: confirmar inscripción (exige ID de Colaborador + estado de pago) ---- -->
+      <div class="modal-overlay" id="modalInscribirNeuro">
+        <div class="modal" style="max-width:440px;">
+          <div class="modal-head">
+            <h3>Confirmar inscripción</h3>
+            <button class="modal-close" id="btnCerrarInscribirNeuro">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div style="font-size:13.4px; color:var(--text-muted); margin-bottom:16px;">
+              Para mover a <strong id="iNombreLeadAdmin" style="color:var(--text);">—</strong> a <strong>Inscritos</strong>, ingresa su ID de Colaborador y el estado de pago.
+            </div>
+            <div class="field">
+              <label>ID de Colaborador *</label>
+              <input type="text" id="iIdColabAdmin" placeholder="Ej. COL-0123" required>
+            </div>
+            <div class="field">
+              <label>Estado de pago *</label>
+              <select id="iEstadoPagoAdmin" required>
+                <option value="pendiente_pago">Pendiente de pago</option>
+                <option value="ya_pago">Ya pagó</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn btn-ghost" id="btnCancelarInscribirNeuro">Cancelar</button>
+            <button class="btn btn-primary" id="btnConfirmarInscribirNeuro">Confirmar inscripción</button>
+          </div>
+        </div>
+      </div>
 
       <!-- ---- MODAL: Editar lead ---- -->
       <div class="modal-overlay" id="modalEditarNeuro">
@@ -580,9 +625,27 @@ tbody tr:last-child td{ border-bottom:none; }
                 <label>Carrera / profesión</label>
                 <input type="text" id="eCarrera">
               </div>
+              <div class="field">
+                <label>ID de Colaborador <span id="eIdColabReq" style="color:var(--danger); font-weight:700;"></span></label>
+                <input type="text" id="eIdColab" placeholder="Ej. COL-0123">
+              </div>
+              <div class="field">
+                <label>Estado de contacto</label>
+                <select id="eContactado">
+                  <option value="no">No contactado</option>
+                  <option value="si">Contactado</option>
+                </select>
+              </div>
               <div class="field detail-full">
                 <label>Enlace de Zoho</label>
                 <input type="url" id="eZoho" placeholder="https://meeting.zoho.com/...">
+              </div>
+              <div class="field detail-full hidden" id="wrapEEstadoPago">
+                <label>Estado de pago</label>
+                <select id="eEstadoPago">
+                  <option value="pendiente_pago">Pendiente de pago</option>
+                  <option value="ya_pago">Ya pagó</option>
+                </select>
               </div>
               <div class="field detail-full">
                 <label>Estado del lead</label>
@@ -599,6 +662,34 @@ tbody tr:last-child td{ border-bottom:none; }
           </div>
         </div>
       </div>
+
+      <!-- ---- VIEW: Accesos al sistema (histórico de logins) ---- -->
+      <section class="view hidden" id="view-logins">
+        <div class="card" style="margin-bottom:18px; display:flex; align-items:center; gap:14px;">
+          <div class="ic" style="width:40px; height:40px; border-radius:10px; background:var(--verde-glow); display:flex; align-items:center; justify-content:center; color:var(--verde-suave); flex-shrink:0;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          </div>
+          <div>
+            <div class="t" style="font-weight:700; font-size:14.5px;">Historial de inicios de sesión</div>
+            <div class="d" style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">Registro en vivo de cada acceso al Panel de Administración y al Panel de Colaborador.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="panel-head" style="padding:0 0 16px; border-bottom:1px solid var(--border); margin-bottom:16px;">
+            <div>
+              <h3 style="font-size:15.5px;">Accesos registrados</h3>
+              <div class="sub" style="font-size:12px; color:var(--text-muted); margin-top:3px;"><span id="countLogins">0</span> inicio(s) de sesión registrados</div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Correo</th><th>Rol</th><th>Fecha y hora</th></tr></thead>
+              <tbody id="tablaLogins"></tbody>
+            </table>
+          </div>
+          <div id="loginsEmpty"></div>
+        </div>
+      </section>
 
     </div>
 
@@ -747,8 +838,10 @@ auth.onAuthStateChanged(async (user)=>{
     state.correo = (user.email||'').toLowerCase();
     state.nombre = user.displayName || user.email;
     iniciarSyncNeuro();
+    iniciarSyncLogins();
     if(esPrimerLogin){
       esPrimerLogin = false;
+      registrarLogin(state.correo, 'admin');
       document.getElementById('loginScreen').classList.add('hidden');
       mostrarBienvenida(() => entrarAlPanel());
     } else {
@@ -759,6 +852,7 @@ auth.onAuthStateChanged(async (user)=>{
     document.getElementById('appShell').classList.add('hidden');
     document.getElementById('loginScreen').classList.remove('hidden');
     detenerSyncNeuro();
+    detenerSyncLogins();
   }
   veil.style.opacity = '0';
   setTimeout(()=> veil.classList.add('hidden'), 300);
@@ -797,7 +891,8 @@ document.getElementById('topAvatar').addEventListener('click', (e)=>{ e.stopProp
 document.addEventListener('click', ()=> userMenu.classList.remove('open'));
 
 const VIEW_META = {
-  'neuro': { title:'Diplomado · Neuroeducación', sub:'Control de interesados e inscritos' }
+  'neuro': { title:'Diplomado · Neuroeducación', sub:'Control de interesados e inscritos' },
+  'logins': { title:'Accesos al sistema', sub:'Historial de inicios de sesión' }
 };
 
 function cambiarVista(view){
@@ -816,6 +911,7 @@ function cambiarVista(view){
   document.getElementById('sidebarOverlay').classList.remove('open');
 
   if(view === 'neuro') renderNeuro();
+  if(view === 'logins') renderLogins();
 }
 function marcarEnVivo(activo){
   const badge = document.getElementById('liveBadge');
@@ -842,8 +938,55 @@ document.getElementById('yearTag').textContent = new Date().getFullYear();
 document.getElementById('yearTag2').textContent = new Date().getFullYear();
 
 const NEURO_COLLECTION = 'neuroeducacion_leads';
+const LOGIN_COLLECTION = 'neuroeducacion_logins';
 const stateNeuro = { leads: [], tab: 'interesado', seleccionados: new Set(), abierto: null };
+const stateLogins = { registros: [] };
 let unsubNeuro = null;
+let unsubLogins = null;
+
+/* Registra cada inicio de sesión (correo, fecha/hora y rol) para su consulta posterior */
+async function registrarLogin(correo, rol){
+  try{
+    await db.collection(LOGIN_COLLECTION).add({
+      correo: correo || '—',
+      rol: rol || 'admin',
+      fecha: new Date().toISOString()
+    });
+  }catch(e){ console.warn('No se pudo registrar el login:', e); }
+}
+
+function iniciarSyncLogins(){
+  if(unsubLogins) return;
+  unsubLogins = db.collection(LOGIN_COLLECTION).onSnapshot(snap => {
+    stateLogins.registros = snap.docs.map(d => d.data()).sort((a,b)=> new Date(b.fecha||0) - new Date(a.fecha||0));
+    if(state.currentView === 'logins') renderLogins();
+  }, err => console.warn('No se pudo sincronizar el historial de accesos:', err));
+}
+function detenerSyncLogins(){ if(unsubLogins){ unsubLogins(); unsubLogins = null; } }
+
+function renderLogins(){
+  const tbody = document.getElementById('tablaLogins');
+  const emptyHost = document.getElementById('loginsEmpty');
+  const registros = stateLogins.registros;
+  document.getElementById('countLogins').textContent = registros.length;
+  if(!tbody) return;
+  if(!registros.length){
+    tbody.innerHTML = '';
+    emptyHost.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+      <div class="t">Sin accesos registrados aún</div>
+      <div class="d">Cada inicio de sesión en ambos paneles quedará registrado aquí automáticamente.</div>
+    </div>`;
+    return;
+  }
+  emptyHost.innerHTML = '';
+  tbody.innerHTML = registros.map((r,i)=> `
+    <tr style="animation-delay:${Math.min(i*20,300)}ms;">
+      <td>${r.correo || '—'}</td>
+      <td><span class="badge ${r.rol==='admin' ? 'badge-azul' : 'badge-verde'}">${r.rol==='admin' ? 'Administrador' : 'Colaborador'}</span></td>
+      <td class="mono" style="white-space:nowrap;">${fmtFecha(r.fecha)}</td>
+    </tr>`).join('');
+}
 
 async function guardarLeadNeuro(lead){
   try{ await db.collection(NEURO_COLLECTION).doc(lead.id).set(lead, { merge:true }); }
@@ -851,6 +994,38 @@ async function guardarLeadNeuro(lead){
 }
 
 function fmtFechaISO(iso){ if(!iso) return '—'; return new Date(iso).toLocaleDateString('es-GT', { day:'2-digit', month:'short', year:'numeric' }); }
+
+/* ================================================================
+   Exportación a CSV (UTF-8 con BOM, listo para Excel)
+   ================================================================ */
+function exportarNeuroCSV(){
+  const regs = stateNeuro.leads.filter(l=> l.estado === stateNeuro.tab);
+  if(!regs.length){ toast('No hay registros para exportar', 'err'); return; }
+  const encabezados = ['ID','Nombre','Facultad','Correo','Teléfono','Carrera','Estado Lead','Estado de Pago','Estado de Contacto','Fecha de Registro','Fecha de Inscripción'];
+  const escapar = v => '"' + String(v==null ? '' : v).replace(/"/g,'""') + '"';
+  const filas = regs.map(l => {
+    const esContactado = l.contactado === true || l.contactado === 'si';
+    return [
+      l.idColaborador || '',
+      l.nombre, l.facultad, l.correo, l.telefono, l.carrera||'',
+      l.estado === 'inscrito' ? 'Inscrito' : 'Interesado',
+      l.estado === 'inscrito' ? (l.estadoPago === 'ya_pago' ? 'Ya pagó' : 'Pendiente de pago') : '',
+      esContactado ? 'Contactado' : 'No contactado',
+      fmtFechaISO(l.fechaRegistro),
+      l.fechaInscripcion ? fmtFechaISO(l.fechaInscripcion) : ''
+    ].map(escapar).join(',');
+  });
+  const csv = '\uFEFF' + [encabezados.join(','), ...filas].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fecha = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `leads-neuroeducacion-${stateNeuro.tab}-${fecha}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('CSV exportado correctamente', 'ok');
+}
+document.getElementById('btnExportarCsvNeuro').addEventListener('click', exportarNeuroCSV);
 
 const CUPO_DIPLOMADO = 25;
 
@@ -878,6 +1053,8 @@ function renderNeuroKPIs(){
   document.getElementById('noticeDescAdmin').textContent = inscritos >= CUPO_DIPLOMADO
     ? '¡Cupo mínimo alcanzado! El diplomado quedará confirmado para el 1 de septiembre de 2026.'
     : `Sujeto a completar el cupo mínimo de ${CUPO_DIPLOMADO} estudiantes inscritos. Faltan ${CUPO_DIPLOMADO - inscritos} para confirmar el inicio.`;
+
+  revisarMetaCupo(inscritos);
 }
 
 function renderNeuro(){
@@ -887,6 +1064,11 @@ function renderNeuro(){
   const activos = stateNeuro.leads.filter(l=> l.estado === stateNeuro.tab);
   document.getElementById('countNeuroInteresados').textContent = stateNeuro.leads.filter(l=> l.estado==='interesado').length;
   document.getElementById('countNeuroInscritos').textContent = stateNeuro.leads.filter(l=> l.estado==='inscrito').length;
+
+  const esInscritos = stateNeuro.tab === 'inscrito';
+  document.getElementById('theadNeuro').innerHTML = esInscritos
+    ? '<tr><th style="width:34px;"></th><th>ID</th><th>Lead</th><th>Facultad</th><th>Correo · Teléfono</th><th>Estado de pago</th><th>Fecha</th><th></th></tr>'
+    : '<tr><th style="width:34px;"></th><th>Lead</th><th>Facultad</th><th>Correo · Teléfono</th><th>Contacto</th><th>Fecha</th><th></th></tr>';
 
   const tbody = document.getElementById('tablaNeuro');
   const emptyHost = document.getElementById('neuroEmpty');
@@ -901,20 +1083,28 @@ function renderNeuro(){
     return;
   }
   emptyHost.innerHTML = '';
-  tbody.innerHTML = activos.map((l,i)=> `
+  tbody.innerHTML = activos.map((l,i)=> {
+    const esContactado = l.contactado === true || l.contactado === 'si';
+    const contactoBadge = `<span class="badge badge-btn ${esContactado ? 'badge-verde' : 'badge-gray'}" onclick="toggleNeuroContactado('${l.id}')" title="Clic para cambiar">${esContactado ? 'Contactado' : 'No contactado'}</span>`;
+    const pagoBadge = l.estadoPago === 'ya_pago' ? `<span class="badge badge-verde">Ya pagó</span>` : `<span class="badge badge-gold">Pendiente de pago</span>`;
+    const idCell = `<td>${l.idColaborador ? `<span class="id-chip">${l.idColaborador}</span>` : '<span style="color:var(--text-muted);">—</span>'}</td>`;
+    return `
     <tr style="animation-delay:${Math.min(i*25,300)}ms;">
       <td>${l.estado==='inscrito' ? `<input type="checkbox" class="check-neuro" data-id="${l.id}" ${stateNeuro.seleccionados.has(l.id)?'checked':''}>` : ''}</td>
+      ${esInscritos ? idCell : ''}
       <td><div style="font-weight:600; cursor:pointer;" onclick="abrirEditarNeuro('${l.id}')">${l.nombre}</div></td>
       <td><span class="badge badge-gray">${l.facultad}</span></td>
       <td style="font-size:12.5px; color:var(--text-muted);">${l.correo} · ${l.telefono}</td>
+      <td>${esInscritos ? pagoBadge : contactoBadge}</td>
       <td class="mono" style="white-space:nowrap;">${fmtFechaISO(l.estado==='inscrito' ? l.fechaInscripcion : l.fechaRegistro)}</td>
       <td style="display:flex; gap:6px; flex-wrap:wrap;">
         ${l.estado==='interesado'
-          ? `<button class="btn btn-primary btn-sm" onclick="marcarNeuroInscrito('${l.id}')">Marcar inscrito</button>`
+          ? `<button class="btn btn-primary btn-sm" onclick="abrirInscribirNeuro('${l.id}')">Marcar inscrito</button>`
           : `<button class="btn btn-ghost btn-sm" onclick="marcarNeuroInteresado('${l.id}')">Regresar</button>`}
         <button class="btn btn-ghost btn-sm" onclick="abrirEditarNeuro('${l.id}')">Editar</button>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
   document.querySelectorAll('.check-neuro').forEach(chk=>{
     chk.addEventListener('change', ()=>{
@@ -924,6 +1114,17 @@ function renderNeuro(){
     });
   });
   actualizarBarraSeleccionNeuro();
+}
+
+/* Cambia rápidamente el estado de Contactado / No contactado desde la tabla (Admin) */
+async function toggleNeuroContactado(id){
+  const l = stateNeuro.leads.find(x=> x.id === id);
+  if(!l) return;
+  const esContactado = l.contactado === true || l.contactado === 'si';
+  l.contactado = !esContactado ? 'si' : 'no';
+  renderNeuro();
+  await guardarLeadNeuro(l);
+  toast(`${l.nombre.split(' ')[0]} marcado como ${l.contactado === 'si' ? 'Contactado' : 'No contactado'}`, 'ok');
 }
 
 function actualizarBarraSeleccionNeuro(){
@@ -973,6 +1174,15 @@ function renderFacultades(){
 /* ================================================================
    Modal: editar lead (permite corregir datos ingresados por error)
    ================================================================ */
+function actualizarVisibilidadEstadoPagoAdmin(){
+  const estadoElegido = document.getElementById('eEstado').value;
+  const wrap = document.getElementById('wrapEEstadoPago');
+  const mostrarPago = estadoElegido === 'inscrito';
+  wrap.classList.toggle('hidden', !mostrarPago);
+  document.getElementById('eIdColabReq').textContent = mostrarPago ? '*' : '';
+}
+document.getElementById('eEstado').addEventListener('change', actualizarVisibilidadEstadoPagoAdmin);
+
 function abrirEditarNeuro(id){
   const l = stateNeuro.leads.find(x => x.id === id);
   if(!l) return;
@@ -982,8 +1192,12 @@ function abrirEditarNeuro(id){
   document.getElementById('eCorreo').value = l.correo || '';
   document.getElementById('eTelefono').value = l.telefono || '';
   document.getElementById('eCarrera').value = l.carrera || '';
+  document.getElementById('eIdColab').value = l.idColaborador || '';
+  document.getElementById('eContactado').value = (l.contactado === true || l.contactado === 'si') ? 'si' : 'no';
   document.getElementById('eZoho').value = l.enlaceZoho || '';
+  document.getElementById('eEstadoPago').value = l.estadoPago || 'pendiente_pago';
   document.getElementById('eEstado').value = l.estado;
+  actualizarVisibilidadEstadoPagoAdmin();
   document.getElementById('modalEditarNeuro').classList.add('open');
 }
 function cerrarEditarNeuro(){ document.getElementById('modalEditarNeuro').classList.remove('open'); stateNeuro.abierto = null; }
@@ -1000,7 +1214,10 @@ document.getElementById('btnGuardarEditarNeuro').addEventListener('click', async
   const correo = document.getElementById('eCorreo').value.trim();
   const telefono = document.getElementById('eTelefono').value.trim();
   const carrera = document.getElementById('eCarrera').value.trim();
+  const idColaborador = document.getElementById('eIdColab').value.trim();
+  const contactado = document.getElementById('eContactado').value;
   const enlaceZoho = document.getElementById('eZoho').value.trim();
+  const estadoPago = document.getElementById('eEstadoPago').value;
   const nuevoEstado = document.getElementById('eEstado').value;
 
   if(!nombre || !correo || !telefono || !facultad){
@@ -1008,11 +1225,23 @@ document.getElementById('btnGuardarEditarNeuro').addEventListener('click', async
     return;
   }
 
+  // Regla: el ID de Colaborador es obligatorio para procesar el cambio a Inscrito
+  if(nuevoEstado === 'inscrito' && !idColaborador){
+    toast('El ID de Colaborador es obligatorio para inscribir al lead.', 'err');
+    return;
+  }
+
   l.nombre = nombre; l.facultad = facultad; l.correo = correo;
   l.telefono = telefono; l.carrera = carrera; l.enlaceZoho = enlaceZoho;
+  l.idColaborador = idColaborador || l.idColaborador || null;
+  l.contactado = contactado;
+
   if(nuevoEstado !== l.estado){
     l.estado = nuevoEstado;
     if(nuevoEstado === 'inscrito' && !l.fechaInscripcion) l.fechaInscripcion = new Date().toISOString();
+  }
+  if(l.estado === 'inscrito'){
+    l.estadoPago = estadoPago;
   }
 
   toast('Cambios guardados correctamente', 'ok');
@@ -1021,14 +1250,70 @@ document.getElementById('btnGuardarEditarNeuro').addEventListener('click', async
   await guardarLeadNeuro(l);
 });
 
-async function marcarNeuroInscrito(id){
+/* ================================================================
+   Modal: confirmar inscripción (exige ID de Colaborador + estado de pago)
+   ================================================================ */
+const modalInscribirNeuro = document.getElementById('modalInscribirNeuro');
+let leadAInscribirNeuro = null;
+function abrirInscribirNeuro(id){
   const l = stateNeuro.leads.find(x=> x.id === id);
   if(!l) return;
+  leadAInscribirNeuro = l;
+  document.getElementById('iNombreLeadAdmin').textContent = l.nombre;
+  document.getElementById('iIdColabAdmin').value = l.idColaborador || '';
+  document.getElementById('iEstadoPagoAdmin').value = l.estadoPago || 'pendiente_pago';
+  modalInscribirNeuro.classList.add('open');
+}
+function cerrarInscribirNeuro(){ modalInscribirNeuro.classList.remove('open'); leadAInscribirNeuro = null; }
+document.getElementById('btnCerrarInscribirNeuro').addEventListener('click', cerrarInscribirNeuro);
+document.getElementById('btnCancelarInscribirNeuro').addEventListener('click', cerrarInscribirNeuro);
+modalInscribirNeuro.addEventListener('click', e => { if(e.target.id==='modalInscribirNeuro') cerrarInscribirNeuro(); });
+
+document.getElementById('btnConfirmarInscribirNeuro').addEventListener('click', async ()=>{
+  if(!leadAInscribirNeuro) return;
+  const idColab = document.getElementById('iIdColabAdmin').value.trim();
+  const estadoPago = document.getElementById('iEstadoPagoAdmin').value;
+  if(!idColab){
+    toast('El ID de Colaborador es obligatorio para inscribir al lead.', 'err');
+    return;
+  }
+  const l = leadAInscribirNeuro;
   l.estado = 'inscrito';
   l.fechaInscripcion = new Date().toISOString();
+  l.idColaborador = idColab;
+  l.estadoPago = estadoPago;
+  cerrarInscribirNeuro();
   renderNeuro();
   await guardarLeadNeuro(l);
   toast(`${l.nombre.split(' ')[0]} fue movido a Inscritos`, 'ok');
+});
+
+/* ================================================================
+   Efecto festivo (confetti) al alcanzar la meta de cupos
+   ================================================================ */
+let metaYaCelebrada = false;
+function revisarMetaCupo(inscritos){
+  if(inscritos >= CUPO_DIPLOMADO){
+    if(!metaYaCelebrada){
+      metaYaCelebrada = true;
+      lanzarConfetti();
+    }
+  } else {
+    metaYaCelebrada = false;
+  }
+}
+function lanzarConfetti(){
+  if(typeof confetti !== 'function'){ return; }
+  toast('¡Cupo mínimo del diplomado alcanzado! 🎉', 'ok');
+  const duracion = 3000;
+  const fin = Date.now() + duracion;
+  const colores = ['#8DC63F','#B7E27C','#4C8DE0','#E0B23E'];
+  (function frame(){
+    confetti({ particleCount: 4, angle: 60, spread: 65, origin: { x: 0 }, colors: colores });
+    confetti({ particleCount: 4, angle: 120, spread: 65, origin: { x: 1 }, colors: colores });
+    if(Date.now() < fin) requestAnimationFrame(frame);
+  })();
+  confetti({ particleCount: 160, spread: 100, origin: { y: 0.4 }, colors: colores });
 }
 async function marcarNeuroInteresado(id){
   const l = stateNeuro.leads.find(x=> x.id === id);
